@@ -15,4 +15,139 @@
 
 
 ### 5.1.1 스프링 환경 추상화 이해하기
-스프링 환경 추상화(environment abstract)는 구성 가능한 모든 속성을 한 곳에서 관리하는 개념이다.
+스프링 환경 추상화(environment abstract)는 구성 가능한 모든 속성을 한 곳에서 관리하는 개념이다. 즉, 속성의 근원을 추상화하여 각 속성을 필요로하는 빈이
+스프링 자체에서 해당 속성을 사용할 수 있게 해준다. 스프링 환경에서는 아래와 같은 속성의 근원으로부터 원천 속성을 가져온다.
+- JVM 시스템 속성
+- 운영체제의 환경 변수
+- 명령행 인자(command-line argument)
+- 애플리케이션의 속성 구성 파일
+
+그런 다음에 스프링 환경에서 이 속성들을 한 군데로 모은 후 각 속성이 주입되는 스프링 빈을 사용할 수 있게 해준다.
+
+스프링 부트에 의해 자동으로 구성되는 빈들은 스프링 환경으로부터 가져온 속성들을 사용해서 구성될 수 있다. 간단한 예로 포트를 설정하려면 ```src/main/resource/application.properties```
+에 값을 설정하면 된다. 또한 애플리케이션을 실행할 때 명령어로 server.port를 지정할 수도 있다. ```java -jar tacoCloud.jar --server.port=9090```
+과 같이 말이다. 
+
+단, 환경 변수로 속성을 설정할 떄는 속성 이름의 형태가 약간 달라진다. 운영체제 나르맫로 환경 변수 규칙이 있기 떄문이다.
+
+
+### 5.1.2 데이터 소스 구성하기
+데이터 소스의 경우 우리 나름의 DataSource 빈을 명시적으로 구성할 수 있다. 그러나 스프링 부트 사용 시는 그럴 필요가 없으며, 대신에 구성 속성을 통해서 해당 
+데이터베이스의 URL과 인증을 구성하는 것이 더 간단해진다.
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost/tacocloud
+    username: tacodb
+    password: tacopassword
+    driver-class-name: com.mysql.jdbc.Driver
+```
+spring.datasource.driver-class-name 속성을 설정하지 않아도 문제는 없지만 문제가 생긴다면 설정하면 된다. 그러면 이 DataSource 빈을 자동-구성할 때
+스프링 부트가 이런 속성 설정을 연결 데이터로 사용한다. 또한, 톰캣의 JDBC 커넥션 풀(connection pool)을 classpath에서 자동으로 찾을 수 있다면 
+DataSource 빈이 그것을 사용한다. 그러나 그렇지 않으면
+- HikariCP
+- Commons DBCP 2
+
+중 하나를 선택해서 사용한다. 이것이 스프링 부트의 자동-구성을 통해서 사용 가능한 커넥션 풀이다. 그러나 우리가 원하는 DataSource 빈을 명시적으로 구성하면
+어떤 커넥션 풀도 사용할 수 있다. 
+
+애플리케션이 시작될 때 데이터베이스를 초기화하는 SQL 스크립트의 실행 방법을 알아봤다. 이때 아래와 같이 ```spring.datasource.schema```와 
+```spring.datasource.data```를 사용하면 더 간단하게 지정할 수 있다.
+
+```yaml
+spring:
+  datasource:
+    schema:
+      - order-schema.sql
+      - ingredient-schema.sql
+      - taco-schema.sql
+      - user-schema.sql
+    data:
+      -ingredient.sql
+```
+
+또는 명시적인 데이터 소스 구성 대신 JNDI(Java Naming and Directory Interface)에 구성하는 것을 원할 수 있다. 이때는 다음과 같이 ```spring.datasource.jndi-name```
+속성을 구성하면 스프링이 찾아준다.
+
+```yaml
+spring:
+  datasource:
+    jndi-name: java:/comp/env/jdbc/tacoCloudDS
+```
+
+단, spring.datasource.jndi-name 속성을 설정하면 기존에 설정된 다른 데이터 소스 구성 속성은 무시된다.
+
+
+### 5.1.4 로깅 구성하기
+대부분의 애플리케이션은 어떤 형태로든 로깅(logging)을 제공한다. 설사 우리 애플리케이션이 직접 로깅하지 않더라도 애플리케이션에서 사용하는 라이브러리가
+자신의 활동을 로깅할 것이다. 
+
+기본적으로 스프링 부트는 INFO 수준(level)으로 콘솔에 로그 메시지를 쓰기 위해 Logback을 통해 로깅을 구성한다. 애플리케이션을 실행할 때 이미 많은 양의
+INFO 수준 항목(메시지)들을 콘솔의 애플리케이션 로그에서 보았을 것이다. 
+
+로깅 구성을 제어할 때는 classpath의 루트에 logback.xml 파일을 생성할 수 있다.
+
+```xml
+
+<configuration>
+    <appender name="STDOUT" class="cn.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>
+                %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+    <logger name="root" level="INFO"/>
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>
+```
+
+로깅에서 사용되는 패턴을 제외하면 이 Logback 구성은 logback.xml 파일이 없을 떄의 기본 로깅 구성과 동일하다. 그러나 logback.xml 파일을 수정하면 우리가 원하는 
+형태로 애플리케이션 로그 파일을 제어할 수 있다.
+
+로깅 구성에서 가장 많이 변경하는 것은 로깅 수준과 로그를 수록할 파일이다. 스프링부트에서는 위의 파일을 생성하지 않고 변경이 가능하다.
+
+```yaml
+logging:
+  level:
+    root: WARN
+    org:
+      springframework:
+        security: DEBUG
+```
+
+위와 같이 로깅할 대상과 레벨을 지정할 수 있다. 만약 로그를 파일로 만들고자 한다면
+
+```yaml
+logging:
+  path: /var/logs/
+  file: TacoCloud.log
+  level:
+    root: WARN
+    org:
+      springframework:
+        security: DEBUG
+```
+
+
+### 5.1.5 다른 속성의 값 가져오기 
+하드 코딩된 String과 숫자 값으로만 속성 값을 설정해야 하는 것은 아니다. 대신에 다른 구성 속성으로부터 값을 가져올 수도 있다.
+
+예를 들어, greeting.welcome이라는 속성을 또 다른 속성인 ```spring.application.name```의 값으로 설정하고 싶다고 해보자. 이때 다음과 같이 ${}를
+사용해서 'greeting, welcome'을 설정할 수 있다. 
+
+```yaml
+greeting:
+  welcome: ${spring.application.name}
+```
+
+또한, 다른 텍스트 속에 ${}를 포함시킬 수도 있다. 
+
+```yaml
+greeting
+  welcome: You are using ${spring.application.name}
+```
+
+### 5.2 커스텀 구성 속성 생성하기 
