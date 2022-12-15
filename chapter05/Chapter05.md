@@ -150,4 +150,77 @@ greeting
   welcome: You are using ${spring.application.name}
 ```
 
-### 5.2 커스텀 구성 속성 생성하기 
+### 5.2 커스텀 구성 속성 생성하기
+구성 속성은 빈의 속성일 뿐이며, 스프링의 환경 추상화로부터 여러 가지 구성을 받기 위해서 설계되었다. 그런데 그런 구성들을 사용한다는 것을
+어떻게 빈에 나타낼 수 있을까?
+
+구성 속성의 올바른 주입을 지원하기 위해서 스프링 부트는 @ConfigurationProperties 어노테이션을 제공한다. 그리고 어떤 스프링 빈이건
+이 어노테이션이 지정되면, 해당 빈의 속성들이 스프링 환경의 속성으로 주입될 수 있다.
+```yaml
+taco:
+  orders:
+      pageSize: 10
+```
+```java
+ import java.beans.ConstructorProperties;
+
+@Component
+@ConstructorProperties(prefix="tacao.orders")
+@Data
+public class OrderProps {
+    private int pageSize = 20;
+}
+```
+OrderProps 클래스는 접두어로 taco.orders를 갖는 ```@ConfigurationProperties```가 지정되었다. 
+또한, ```@Component```가 지정되었으므로, 스프링 컴포넌트 검색에서 OrderProps를 자동으로 찾은 후 스프링 애플리케이션
+컨텍스트의 빈으로 생성해준다.
+
+
+### 5.3 프로파일로 구성하기
+애플리케이션이 서로 다른 런타임 환경에서 배포, 설치될 떄는 대개 구성 명세가 달라진다. 예를 들어 데이터베이스 연결 명세가 개발 환경과
+다를 것이고, 프로덕션 환경과도 여전히 다르다. 이때는 각 환경의 속성들을 application.properties나 application.yml에 
+정의하는 대신, 운영체제의 환경 변수를 사용해서 구성하는 것이 한 가지 방법이다. 
+
+그러나 하나 이상의 구성 속성을 환경 변수로 지정하는 것은 번거롭다. 게다가 환경 변수의 변경을 추적 관리하거나 오류가 있을 경우에 변경 전으로 바로
+되돌릴 수 있는 방법이 마땅치 않다. 따라서 런타임에 활성화되는 프로파일에 따라 서로 다른 빈, 구성클래스, 구성 속성들이 적용 또는 
+무시되도록 하는 것이 프로파일이다. 
+
+
+### 5.3.1 프로파일 특정 속성 정의
+프로파일에 특정한 속성을 정의하는 한 가지 방법은 프로덕션 환경의 속성들만 포함하는 또는 다른 .yml이나 .properties를 생성하는 것이다.
+이때 파일 이름은 다음 규칙을 따라야한다. ```application-{프로파일 이름}.yml``` 또는 ```application-{프로파일 이름}.properties```이다.
+또 YAML 구성에서만 또 다른 방법으로 프로파일 특정 속성을 정의할 수도 있다. 이때는 프로파일에 특정되지 않고 공통으로 적용되는
+기본 속성과 함께 프로파일 특정 속성을 application.yml에 지정할 수 있다. 즉, 프로파일에 특정되지 않은 기본 속성 다음에 3개의 -(하이픈)을 추가하고
+그 다음에 해당 프로파일의 이름을 나타내는 ```spring.profiles```속성을 지정하면 된다.
+
+
+
+### 5.3.2 프로파일 활성화하기
+프로파일 특정 속성들의 설정은 해당 프로파일이 활성화되어야 유효하다. 이는 ```spring.profile.active```에 지정하면된다.
+그러나 이렇게 고정하면 환경에 맞춰 대응하기 어렵다. 이 때는 ```java -jar [application_name].jar --spring.profiles.active=prod```
+와 같이 명령행 인자로 활성화할 프로필을 설정할 수도 있다. 여기서 위 명령행으로 실행하기 전에
+```yaml
+spring:
+ profiles:
+  active: prod,audit,ha
+```
+만일 스프링 애플리케이션을 클라우드 파운드리(cloudFoundry)에 배포할 때는 cloud라는 이름의 프로파일이 자동으로 활성화하면 된다.
+
+
+### 5.3.3 프로파일을 이용해서 조건별로 빈생성하기
+서로 다른 프로파일 각각에 적합한 빈들을 제공하는 것이 유용할 떄가 있다. 일반적으로 자바 구성 클래스에 선언된 빈은 활성화되는 프로파일과는 무관하게 생성된다.
+그러나 특정 프로파일이 활성화될 때만 생성되어야하는 빈이 있다면 ```@Profile``` 어노테잇ㄴ을 이용하면된다.
+
+```java
+class example {
+
+    @Bean
+    @Profile({"dev", "qa"}) // @Profile("!prod")와 같이도 사용할 수 있다. 
+    public CommandLinerRunner dataLoader(IngredientRepository repo, UserRepository userRepo,
+                                         PasswordEncoder encoder) {
+//        ...
+    }
+}
+```
+
+```@Profile```은 ```@Configuration```이 지정된 클래스 전체에 대해서 사용할 수도 있다. 
