@@ -1,0 +1,4 @@
+spring:
+  jms:
+    template:
+      default-destination: tacocloud.order.queue
