@@ -339,3 +339,324 @@ public class PushConfig {
 좋은 선택이 될 때가 있다. 그러나 우리 애플리케이션은 사람이 직접 조리하는 시간으로 심각한 병목을 초래할 가능성이 있다. 주방이 과부하 걸리지 않도록 도착 주문을 버퍼링해야 한다.
 그렇다고 메시지 리스너가 나쁘다는 것은 아니다. 오히려 메시지가 빠르게 처리될 수 있을 때 딱 맞는다. 그러나 메시지 처리기가 자신의 시간에 맞춰 더 많은 메시지를 요청할 수 
 있어야 한다면 JmsTemplate이 제공하는 풀 모델이 더 적합할 것이다. 
+
+
+## 8.2 RabbitMQ, AMQP 사용하기
+기존 JMS는 자바 명세이므로 자바 애플리케이션에서만 사용할 수 있다는 것이 단점이 도니다. RabbitMQ, 카프카와 같은 메시징 시스템은 이런 단점을 해결하여 다른 언어와
+JVM 외의 다른 플랫폼에서 사용할 수 있게 했다.
+
+AMQP의 가장 중요한 구현이라고 할 수 있는 RabbitMQ는 JMS보다 더 진보된 메시지 라우팅 전략을 제공한다. JMS 메시지가 수신자가 가져갈 메시지 도착지의 이름을 주소로 
+사용하는 반면, AMQP 메시지는 수신자가 리스닝하는 큐와 분리된 거래소 이름과 라우팅 키를 주소로 사용한다.
+
+```
+                <RabbitMQ 브로커>             
+                |                            
+                |           바인딩 -> 큐          -> 메시지 수신자 
+메시지 전송자  ->     거래소  〈                      
+                |           바인딩 -> 큐          -> 메시지 수신자
+                |                           
+```
+
+메시지가 RabbitMQ 브로커에 도착하면 주소로 지정된 거래소에 들어간다. 거래소는 하나 이상의 큐에 메시지를 전달할 책임이 있다. 이때 거래소 타입, 거래소와 큐 간의 바인딩,
+메시지의 라우팅 키 값을 기반으로 처리한다.  거래소는 아래와 같은 종류가 있다.
+
+ * 기본(Default) : 브로커가 자동으로 생성하는 특별한 거래소, 해당 메시지의 라우팅 키와 이름이 같은 큐로 메시지를 전달한다. 모든 큐는 자동으로 기본 거래소와 
+연결된다. 
+ * 다이렉트(Direct) : 바인딩 키가 해당 메시지의 라우팅 키와 같은 큐에 메시지를 전달한다. (Unicast)
+ * 토픽(Topic) : 바인딩 키(와일드 카드를 포함하는)가 해당 메시지의 라우팅 키와 일치하는 하나의 이상의 큐에 메시지를 전달한다. (Multicast)
+ * 팬아웃(Fanout) : 바인딩 키나 라우팅 키에 상관 없이 모든 연결된 큐에 메시지를 전달한다. (Broadcast)
+ * 헤더(Header) : 토픽 거래소와 유사하며, 라우팅 키 대신 메시지 헤더 값을 기반으로 한다는 것이 다르다. (Multicast)
+ * 데드 레터(Dead letter) : 전달 불가능한 즉, 정의된 어떤 거래소-큐 바인딩과는 일치하지 않는 모든 메시지를 보관하는 잡동사니 거래소이다.
+
+
+기본 형태는 팬아웃이며, 이들은 JMS의 큐 및 토픽과 거의 일치한다. 그러나 다른 거래소들을 사용하면 더 유연한 라우팅 스킴을 정의할 수 있다. 메시지는 라우팅 키를 
+갖고 거래소로 전달되고 큐에서 읽혀져 소비된다는 것을 이해하는 것이 가장 중요하다. 메시지는 바인딩 정의를 기반으로 거래소로부터 큐로 전달된다. 
+
+## 8.2.1 RabbitMQ를 스프링에 추가하기
+```xml
+<dependency>
+    <groupId>org.springframwork.boot</groupId>
+    <artifactId>spring-boot-starter-amqp</artifactId>
+</dependency>
+```
+이처럼 AMQP 스타터를 빌드에 추가하면 다른 지원 컴포넌트는 물론이고 AMQP 연결 팩토리와 RabbitTemplate 빈을 생성하는 자동-구성이 수행된다. 
+따라서 스프링을 사용해서 RabbitMQ 브로커로부터 메시지를 전송 및 수신할 수 있다. 
+
+### RabbitMQ 브로커의 위치와 인증 저보를 구성하는 속성
+|            속성            |               설명                |
+|:------------------------:|:-------------------------------:|
+| spring.rabbitmq.address  | 쉼표로 구분된 리스트 형태의 RabbitMQ 브로커 주소 |
+|   spring.rabbitmq.host   |            브로커의 호스트             |
+|   spring.rabbitmq.port   |             브로커의 포트             |
+| spring.rabbitmq.username |     브로커를 사용하기 위한 사용자 이름 (선)     |
+| spring.rabbitmq.password |     브로커를 사용하기 위한 사용자 암호 (선)     |
+
+이를 실무에 맞춰서 세팅하면 예를 들어 아래와 같다.
+```yaml
+spring:
+  profiles: prod
+  rabbitmq: 
+    host: rabbit.tacocloud.com
+    port: 5673
+    username: tacoweb
+    password: l3tm31n
+```
+
+## 8.2.2 RabbitTemplate을 사용해서 메시지 전송하기
+RabbitMQ 메시징을 위한 스프링 지원은 핵심은 RabbitTemplate이다. RabbitTemplate은  JmsTemplate과 유사한 메소드들을 제공한다.
+그러나 RabbitMQ 특유의 작동 방법에 따른 미세한 차이가 있다. RabbitTemplate을 사용한 메시지 전송의 경우에 send(), convertAndSend() 메소드는 JmsTemplate 메소드와 유사하다.
+그러나 지정된 큐나 토픽에만 메시지를 전송했던 JmsTemplate 메소드와 달리 RabbitTemplate은 거래소와 라우팅 키의 형태로 메시지를 전송한다. 
+
+```java
+interface RabbitTemplate {
+    //원시 메시지 전송
+    void send(Message message) throws AmqpException;
+    void send(String routingKey, Message message) throws AmqpException;
+    void send(String exchange, String routingKey, Message message) throws AmqpException;
+    
+    //객체로부터 변환된 메시지를 전송한다.
+    void convertAndSend(Object message) throws AmqpException;
+    void convertAndSend(String routingKey, Object message) throws AmqpException;
+    void convertAndSend(String exchange, String routingKey, Object message) throws AmqpException;
+    
+    // 객체로부터 변환되고 후처리(post-processing)되는 메시지를 전송
+    void convertAndSend(Object message, MessagePostProcessor mPP) throws  AmqpException;
+    void convertAndSend(String routingKey, Object message, MessagePostProcessor mPP) throws  AmqpException;
+    void convertAndSend(String exchange, String routingKey, Object message, MessagePostProcessor mPP) throws  AmqpException;
+}
+```
+
+볼 수 있듯이 JmsTemplate과 유사한 패턴을 따른다. 이 메소드들은 도착지 이름(Destination) 대신 거래소와 라우팅 키를 지정하는 문자열 값을 인자를 받는다는 점이 
+JmsTemplate과 다르다. 거래소를 인자로 받지 않는 메소드들은 기본 거래소로 메시지를 전송한다. 마찬가지로 라우팅 키를 인자로 받지 않는 메소드들은 기본 라우팅 키로 전송되는
+메시지를 갖는다.
+
+```java
+@Service
+@RequiredArgsConstructor
+public class RabbitOrderMessagingService implements  OrderMessagingService {
+    private final RabbitTemplate rabbit;
+
+    @Override
+    public void sendOrder(Order order) {
+        MessageConverter converter = rabbit.getMessageConverter();
+        MessageProperties props = new MessageProperties();
+        Message message = converter.toMessage(order, props);
+        rabbit.send("tacocloud.order", message);
+
+    }
+}
+```
+이와 같이 ```MessageConverter```가 있으면 Order 객체를 Message 객체로 변환하기 쉽다. 메시지 속성은  ```MessageProperties```를 사용해서 제공하면 된다.
+그러나 메시지 속성을 설정할 필요가 없다면 ```MessageProperties```의 기본 인스턴스면 족하다. 그리고 모든 준비가 완료되면 ```send()```를 호출할 수 있다. 
+이때 메시지와 함께 거래소 및 라우팅 키를 인자로 전달한다. (선택적) 기본 거래소의 이름은 ```""```이며, 이는 RabbitMQ가 자동으로 생성하는 기본 거래소와 일치한다. 
+이와 동일하게 기본 라우팅 키도 ```""```이다.
+
+이러한 기본값은 ```spring.rabbitmq.template.exchange```와 ```spring.rabbitmq.template.routing-key```로 변경할 수 있다.
+```yaml
+spring:
+  rabbitmq:
+    template:
+      exchange: tacocloud.orders
+      routing-key: kitchens.central
+```
+이렇게 되면 거래소를 지정하지 않은 모든 메시지는 이름이 ```tacocloud.orders```인 거래소로 자동 전송된다. 만일 send(), convertAndSend()를 호출할 때 
+라우팅 키도 지정하지 않으면 메시지는 ```kitchens.central```을 라우팅 키로 갖는다. 
+
+메시지 변환기로 Message 객체를 생성하는 것은 손쉽지만, 모든 변환을 RabbitTemplate이 처리하도록 ```convertAndSend()```를 이용하는 것도 한 방법이다.
+
+```java
+@Service
+@RequiredArgsConstructor
+public class RabbitOrderMessagingService implements  OrderMessagingService {
+    private final RabbitTemplate rabbit;
+
+    @Override
+    public void sendOrder(Order order) {
+        rabbit.convertAndSend("tacocloud.order", message);
+    }
+}
+```
+
+### 메시지 변환기 구성하기
+기본적으로 메시지 변환은 SimpleMessageConverter로 수행되며, 이는 String과 같은 간단한 타입과 Serializable 객체를 Message로 변환할 수 있다. 그러나 스프링은
+다음을 포함해서 RabbitTemplate에서 사용할 수 있는 여러 개의 메시지 변환기를 제공한다. 
+
+ * Jackson2JsonMessageConverter: Jackson2JSONProcessor를 사용해서 객체를 JSON으로 변환
+ * MarshallingMessageConvert: 스프링 Marshaller와 Unmarshaller를 사용해서 변환
+ * SerializerMessageConverter: 스프링의 Serializer와 Deserializer를 사용해서 String과 객체를 변환한다.
+ * SimpleMessageConverter: String, byte 배열, Serializable 타입을 변환한다.
+ * ContentTypeDelegatingMessageConverter: contentType 헤더를 기반으로 다른 메시지 변환기에 변환을 위임한다. 
+
+
+메세지 변환기를 변경해야 할 때는 MessageConverter 타입의 빈을 구성하면 된다. 예를 들어, JSON 기반 메시지 변환의 경우는 Jackson2JsonMessageConverter를
+구성하면 된다.
+
+```java
+@Component
+public class Configuration {
+    @Bean
+    public MessageConverter messageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+}
+```
+
+이렇게 하면 스프링 부트 자동-구성에서 이 빈을 찾아서 기본 메시지 변환기 대신 이 빈을 RabbitTemplate으로 주입한다. 
+
+
+### 메시지 속성 설정하기 
+JMS에서처럼 전송하는 메시지의 일부 헤더를 설정해야하는 경우가 있다. 이때는 Message 객체를 생성할 떄 메시지 변환기에 제공하는 MessageProperties 인스턴스로 헤더를 설정할 수 있다.
+```java
+@Service
+@RequiredArgsConstructor
+public class RabbitOrderMessagingService implements  OrderMessagingService {
+    private final RabbitTemplate rabbit;
+
+    @Override
+    public void sendOrder(Order order) {
+        MessageConverter converter = rabbit.getMessageConverter();
+        MessageProperties props = new MessageProperties();
+        props.setHeader("X_ORDER_SOURCE", "WEB");
+        Message message = converter.toMessage(order, props);
+        rabbit.send("tacocloud.order", message);
+
+    }
+}
+```
+그러나 convertAndSend()에서는 ```MessageProperties```를 직접 사용할 수 없으므로 아래와 같이 MessagePostProcessor에서 진행해야 한다. 
+
+```java
+@Service
+@RequiredArgsConstructor
+public class RabbitOrderMessagingService implements  OrderMessagingService {
+    private final RabbitTemplate rabbit;
+
+    @Override
+    public void sendOrder(Order order) {
+        rabbit.convertAndSend("tacocloud.order", order, new MessagePostProcessor() {
+            @Override
+            public Message postProcessMessage(Message message) throws  AmqpException {
+                MessageProperties props = message.getMessageProperties();
+                props.setHeader("X_ORDER_SOURCE", "WEB");
+                return message;
+            }
+        });
+    }
+}
+```
+
+
+## 8.2.3 RabbitMQ로부터 메시지 수신하기
+RabbitTemplate을 사용한 메시지 전송은 JmsTemplate을 사용한 메시지 전송과 크게 다르지 않다. RabbitMQ 큐로부터의 메시지 수신도 JMS로부터의 메시지
+수신과 크게 다르지 않다. JMS에서처럼 RabbitMQ의 경우도 아래의 두 가지를 선택할 수 있다. 
+* RabbitTemplate을 사용해서 큐로부터 메시지를 가져온다.
+* ```@RabbitListener```가 지정된 메소드로 메시지가 푸시된다. 
+
+
+### RabbitTemplate을 사용해서 메시지 수신하기
+```java
+interface RabbitTemplate {
+    //메시지 수신
+    Message receive() throws AmqpException;
+    Message receive(String queueName) throws AmqpException;
+    Message receive(Long timeoutMillis) throws AmqpException;
+    Message receive(String queueName, Long timeoutMillis) throws AmqpException;
+    
+    // 메시지로부터 변환된 객체를 수신
+    Object receiveAndConvert()  throws AmqpException;
+    Object receiveAndConvert(String queueName)  throws AmqpException;
+    Object receiveAndConvert(Long timeMillis)  throws AmqpException;
+    Object receiveAndConvert(String queueName, Long timeoutMillis)  throws AmqpException;
+    
+    //메시지로부터 변환된 type-safe 객체를 수신한다.
+    <T> T receiveAndConvert(parameterizedTypeReference<T> type) throws  AmqpException;
+    <T> T receiveAndConvert(String queueName, parameterizedTypeReference<T> type) throws  AmqpException;
+    <T> T receiveAndConvert(Long timeoutMillis, parameterizedTypeReference<T> type) throws  AmqpException;
+    <T> T receiveAndConvert(String queueName, Long timeoutMillis, parameterizedTypeReference<T> type) throws  AmqpException;
+}
+```
+
+이 메소드들은 앞의 send(), convertAndSend()와 대칭된다. 그러나 시그니쳐 부분이 조금 다르다. 우선, 수신 메소드의 어느 것도 거래소, 라우팅 키를 매개변수로 갖지 
+않는다. 왜냐하면 거래소와 라우팅 키는 메시지를 큐로 전달되는데 사용하지만, 일단 메시지가 큐로 들어오면 다음 메시지 도착은 큐로부터 메시지를 소비하는
+consumer이기 때문이다. 따라서 메시지를 소비하는 애플리케이션은 거래소 및 라우팅 키에 신경 쓸 필요가 없다.
+또한, 수신 메소드에 수신 타입아웃 파라미터가 있다. 즉, 호출된 즉시 receive가 결과를 반환하며 수신할 메시지가 없으면 ```null```을 반환한다. 
+이것이 JmsTemplate의 ```receive()```와 다른 점이다. 
+
+```java
+
+@Component
+@RequiredArgsConstructor
+public class RabbitOrderReceiver {
+    private final RabbitTemplate rabbit;
+    private MessageConverter converter;
+
+    public Order receiveOrder(){
+        Optional<Message> message = Optional.ofNullable(rabbit.receive("tacocloud.orders"), 3000);
+        return message.map(mes -> (Order) converter.fromMessage(mes)).orElseGet(() -> null);
+    }
+}
+```
+이렇게하면 ```RabbitTemplate```의  ```receive()```를 호출하여 주문 데이터를 가져온다. 위 코드는 3초의 지연을 용인하며, 3초 이상 지연된ㄷ다면
+```null```을 반환할 것이다. 만약 위의 '3000'이라는 값이 보기 불편하다면
+
+```yaml
+spring:
+  rabbitmq:
+    template:
+      receive-timeout: 3000
+```
+과 같이 설정해줄 수 있다. 또한 자동 변환에 대해서 의구심을 갖는다면
+
+
+```java
+
+@Component
+@RequiredArgsConstructor
+public class RabbitOrderReceiver {
+    private final RabbitTemplate rabbit;
+    private MessageConverter converter;
+
+    public Order receiveOrder(){
+        
+        return (Order) rabbit.receiveAndConvert("tacocloud.order.queue");
+    }
+}
+```
+로 간단하게 처리할 수 있다. 여기서 타입 캐스팅도 문제가 된다고 생각한다면
+
+```java
+
+import java.lang.reflect.ParameterizedType;
+
+@Component
+@RequiredArgsConstructor
+public class RabbitOrderReceiver {
+    private final RabbitTemplate rabbit;
+    private MessageConverter converter;
+
+    public Order receiveOrder() {
+        return rabbit.receiveAndConvert("tacocloud.order.queue", new ParameterizedTypeReference<Order>() {});
+    }
+}
+```
+로 처리하면 된다. 단, receiveAndConvert()에 ```ParameterizedTypeReference```를 사용하려면 메시지 변환기가 
+```SmartMessageConverter``` 인터페이스를 구현한 클래스```(Jackson2JsonMessageConverter)```이어야 한다.
+
+### 리스너를 사용해서 RabbitMQ 메시지 처리 
+메시지 기반의 RabbitMQ 빈을 위해 스프링은 RabbitListener를 제공한다. 이것은 JmsListener에 대응하는 RabbitMQ 리스너이다. 메시지가 큐에 도착할 때 
+메소드가 자동호출 되도록 지정하기 위해서는 ```@RabbitListener``` 어노테이션을 RabbitMQ 빈의 메소드에 지정해야한다.
+
+```java
+@Component
+@RequiredArgsConstructor
+public class RabbitOrderListener {
+    private final KitchenUi ui;
+
+    @RabbitListener(queues = "tacocloud.order.queue")
+    public void receiveOrder(Order order) {
+        ui.displayOrder(order);
+    }
+}
+```
+이는 ```@JmsListener```와 거의 동일하게 작동한다. 따라서 서로 다른 메시지 브로커인 RabbitMQ, Artemis, ActiveMQ를 사용하는 코드를 작성할 때
+크게 달라지는 것이 없다. 
