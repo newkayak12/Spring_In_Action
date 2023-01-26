@@ -659,4 +659,166 @@ public class RabbitOrderListener {
 }
 ```
 이는 ```@JmsListener```와 거의 동일하게 작동한다. 따라서 서로 다른 메시지 브로커인 RabbitMQ, Artemis, ActiveMQ를 사용하는 코드를 작성할 때
-크게 달라지는 것이 없다. 
+크게 달라지는 것이 없다.
+
+
+## 8.3 카프카 사용하기 
+아파치 카프카는 가장 새로운 메시징 시스템이며, ActiveMQ, Artemis, RabbitMQ와 유사한 메시지 브로커다. 그러나 카프카 특유의 아키텍쳐를 갖고 있다. 
+
+카프카는 높은 확장성을 제공하는 클러스터(cluster)로 실행되도록 설계됐다. 그리고 클러스터의 모든 카프카 인스턴스에 걸쳐 토픽(topic)을 파티션(partition)
+으로 분할하여 메시지를 관리한다. RabbitMQ가 거래소와 큐를 사용해서 메시지를 처리하는 반면, 카프카는 토픽만 사용한다.
+
+카프카의 토픽은 클러스터의 모든 브로커에 걸쳐 복제된다(replicated). 클러스터의 각 노드는 하나 이상의 토픽에 대한 리더(leader)로 동작하며,
+토픽 데이터를 관리하고 클러스터의 다른 노드로 데이터를 복제한다.
+
+
+                   |                  카프카 클러스터              | 
+    producer1  ->  |  [브로커 [파티션 0] / [파티션 1] / [파티션 2]]   |  -> consumer1                           
+                   |                                           | 
+    producer2  ->  |  [브로커 [파티션 0] / [파티션 1] / [파티션 2]]   |  -> consumer2                               
+                   |                                           | 
+    producer3  ->  |  [브로커 [파티션 0] / [파티션 1] / [파티션 2]]   |  -> consumer3                   
+                   |                                           |
+
+    *** 카프카 클러스터는 여러 개의 브로커로 구성되며, 각 브로커는 토픽의 파티션 리더로 동작한다.
+
+
+각 토픽은 여러 개의 파티션으로 분할될 수 있다. 이 경우 클러스터의 각 노드는 한 토픽에 대해서 하나 이상의 파티션의 리더가 된다.
+
+## 8.3.1 카프카를 사용해서 스프링 설정하기
+
+카프카를 사용해서 메시지를 처리하려면 이에 적합한 의존성을 빌드에 추가해야한다.
+```xml
+<dependency>
+    <groupId>org.springframwork.kafka</groupId>
+    <artifactId>spring-kafka</artifactId>
+</dependency>
+```
+
+이처럼 의존성을 추가하면 스프링 부트가 카프카 사용을 위한 자동-구성을 해준다. (스프링 애플리케이션에서 사용할 KafkaTemplate을 준비한다.) 따라서 우리는 
+KafkaTemplate을 주입하고 메시지를 전송, 수신하면 된다.
+
+그러나 메시지를 전송 및 수신하기에 앞서 카프카를 사용할 떄 편리한 몇 가지 속성을 알아야 한다. 특히 KafkaTemplate은 기본적으로 localhost에서 실행되면서 
+9092 포트를 리스닝하는 카프카 브로커를 사용한다. 애플리케이션을 개발할 떄는 로커의 카프카 브로커를 사용하면 좋다. 그러나 실무로 이양한다면
+호스트와 포트를 구성해야한다. 
+```yaml
+spring:
+  kafka:
+    bootstap-servers:
+    - kafka.tacocloud.com: 9092 
+    - kafka.tacocloud.com: 9093 
+    - kafka.tacocloud.com: 9094 
+```
+    
+## 8.3.2 KafkaTemplate을 사용해서 메시지 전송하기
+```java
+interface KafkaTemplate {
+    ListenableFuture<SendResult<K,V>> send(String topic, V data);
+    ListenableFuture<SendResult<K,V>> send(String topic, K key, V data);
+    ListenableFuture<SendResult<K,V>> send(String topic, Integer partition, K key,  V data);
+    ListenableFuture<SendResult<K,V>> send(String topic, Integer partition, Long timestamp, K key,  V data);
+    
+    ListenableFuture<SendResult<K,V>> send(ProducerRecord<K,V> record);
+    ListenableFuture<SendResult<K,V>> send(Message<?> message);
+    
+    ListenableFuture<SendResult<K,V>> sendDefault(V data);
+    ListenableFuture<SendResult<K,V>> sendDefault(K key, V data);
+    ListenableFuture<SendResult<K,V>> sendDefault(Integer partition, K key, V data);
+    ListenableFuture<SendResult<K,V>> sendDefault(Integer partition, Long timestamp, K key, V data);
+}
+
+```
+
+주의할 것은 ```convertAndSend()```가 없다는 것이다. 왜냐하면 KafkaTemplate은 제네릭을 사용하고 메시지를 전송할 때 직접 도메인 타입을 처리할 수 있기 떄문이다.
+따라서 send에 convertAndSend가 있다고 생각하면 된다. 또한, 이전에 사용했던 것들과 같이 다른 매개변수들이 있다. 카프카에서 메시지를 전송할 때는 메시지가 
+전송되는 방법을 알려주는 다음 매개변수를 지정할 수 있다.
+
+* 메시지가 전송될 토픽(send()에 필요)
+* 토픽 데이터를 사용하는 파티션 (선)
+* 레코드 전송 키 (선)
+* 타임스탬프 (선, 기본값 System.currentTimeMillis())
+* 페이로드 (필)
+
+토픽과 페이로드는 가장 중요한 매개변수들이다. 파티션과 키는 send()와 sendDefault()에 매개변수로 제공되는 추가 정보일 뿐 KafkaTemplate을 사용하는 방법에는
+거의 영향을 주지 않는다. 
+```java
+@Service
+@RequiredArgsConstructor
+public class KafkaOrderMessagingService implements OrderMessagingService{
+    private final KafkaTemplate<String, Order> kafkaTemplate;
+
+    @Override
+    public void sendOrder(Order order) {
+        kafkaTemplate.send("tacocloud.order.topic", order);
+    }
+}
+
+```
+여기서 ```sendOrder()```는 ```KafkaTemplate```의 ```send()```를 이용해서 ```tacocloud.order.topic```라는 토픽으로 
+Order 객체를 전송한다. 이는 JMS, RabbitMQ와 굉장히 유사하다. 만일 기본 토픽을 설정하면 더 간단해진다.
+
+```yaml
+spring:
+  kafka:
+    template:
+      default-topic: tacocloud.orders.topic
+```
+
+이 이후에 ```sendDefault()```를 호출하면 된다. 이 때는 토픽을 인자로 전달하지 않는다.
+
+
+## 8.3.3 카프카 리스너 작성하기
+send(), sendDefault() 특유 메소드 시그니처 외에도 KafkaTemplate은 메시지를 수신하는 메소드를 일체 제공하지 않는다. 이 점이 JmsTemplate, RabbitTemplate
+과는 다르다. 
+
+카프카의 경우 메시지 리스너는 ```@KafkaListener``` 어노테이션이 지정된 메소드에 정의된다. 이는 ```@JmsListener```, ```@RabbitListener```와 유사하며
+동일한 방법으로 사용된다. 
+
+```java
+
+@Component
+@RequiredArgsConstructor
+public class Config {
+    private final KitchenUi ui;
+
+    @KafkaListener(topics = {"tacocloud.orders.topic"})
+    public void handle(Order order) {
+        ui.displayOrder(order);
+    }
+
+}
+```
+
+"tacocloud.orders.topic"이라는 이름의 토픽에 메시지가 도착해야 자동 호출된다. 그리고 ```handle()```에 페이로드만 인자로 받는다. 
+그러나 메시지 메타데이터가 필요하다면 ```ConsumerRecord```, ```Message```객체도 인자로 받을 수 있다.
+
+```java
+
+@Component
+@RequiredArgsConstructor
+public class Config {
+    private final KitchenUi ui;
+
+    @KafkaListener(topics = {"tacocloud.orders.topic"})
+    public void handle(Order order, ConsumerRecord<String,Order> record, Message message) {
+        record.partition();
+        record.timestamp();
+        
+        MessageHeaders headers = message.getHeaders();
+        ui.displayOrder(order);
+    }
+
+}
+```
+
+메시지 페이로드는 ```ConsumerRecord.value()``` 혹은 ```Message.getPayload()```로도 받을 수 있다. 
+이는 일전의 ```handle()``` 메소드에 Order 객체를 직접 요청하는 대신 ConsumerRecord, Message를 통해서 Order를 얻을 수 있음을 의미한다.
+
+
+*** 요약
+
+1. 애플리케이션 간 비동기 메시지 큐를 이용한 통신 방식은 간접 계층을 제공하므로 애플리케이션 간의 결합도는 낮추면서 확장성은 높인다.
+2. 스프링은 JMS, RabbitMQ 또는 아파치 카프카를 사용해서 비동기 메시징을 지원한다.
+3. 스프링 애플리케이션은 템플릿 기반의 클라이언트인 JmsTemplate, RabbitTemplate 또는 KafkaTemplate을 사용해서 메시지 브로커를 통한 메시지 전송을 할 수 있다.
+4. 메시지 수신 애플리케이션은 같은 템플릿 기반의 클라이언트들은 사용해서 풀 모델 형태의 메시지를 소비할 수 있다.
+5. 메시지 리스너 어노테이션인  ```@JmsListener```, ```@RabbitListener``` 또는 ```@KafkaListener```를 빈 메소드에 지정하면 푸시 모델의 형태로 컨슈머에게 메시지가 전송될 수 있다.
