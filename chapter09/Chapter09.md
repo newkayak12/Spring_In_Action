@@ -454,3 +454,111 @@ public interface UpperCaseGateway {
     String uppercase(String in);
 }
 ```
+신기한 사실은 이 인터페이스를 따로 구현할 필요가 없다는 것이다. 지정된 채널을 통해 데이터를 전송하고 수신하는 구현체를 스프링 통합이 런타임 시에 자동으로 제공하기 때문이다.
+uppercase() 가 호출되면 지정된 문자열이 통합 플로우의 inChannel로 전달된다. 그리고 플로우가 어떻게 정의되고 무슨 일을 하는 지와 상관없이, 데이터 outChannel로
+도착하면 uppercase() 메소드로부터 반환한다. DSL로 작성하면 아래와 같다.
+```java
+@Bean
+public IntegrationFlow uppercaseFlow(){
+    return IntegrationFlows
+        .from("inChannel")
+        .<String,String> transform(s -> s.toUpperCase())
+        .channel("outChannel")
+        .get();
+}
+```
+
+여기서는 inChannel로 데이터가 입력되면서 플로우가 시작된다. 그다음에 대문자로 변환하기 위해 람다로 정의된 변환기에 의해 메시지 페이로드가 변환된다. 그리고 결과 메시지는
+outChannel로 전달된다. 이것은 UpperCaseGateway 인터페이스의 응답 채널로 선언했던 채널이다. 
+
+
+## 9.2.8 채널 어댑터
+채널 어댑터는 통합 플로우의 입구와 출구를 나타낸다. 데이터는 inbound 채널 어댑터를 통해 들어오고 outbound 채널 어댑터를 통해서 나간다. inbound는 플로우에 지정된
+데이터 소스에 따라 여러 가지 형태를 갖는다.
+```java
+@Bean
+@InboundChannelAdapter( poller=@Poller(fixedRate="1000"), channel="numberChannel")
+public MessageSource<Integer> numberSource(AtomicInteger source){
+    return () -> new GenericMessage<>(source.getAndIncrement());
+}
+```
+와 같이 말이다. 이 @Bean은 ```@InboundChannelAdapter```으로 지정됐으므로 inbound 어댑터로 작동한다. 이 bean은 주입된 AtomicInteger로 부터
+numberChannel이라는 이름으로 매초 한 번씩 폴링한다. DSL에서는 @InboundChannelAdapter 역할을 ```from()```이 한다.
+
+```java
+@Bean
+public IntegrationFlow someFlow(AtomicInteger integerSource){
+    return IntegerFlows
+        .from(integerSource, "getAndIncrement",
+            c -> c.poller(Pollers.fixedRate(1000))
+        )
+        ...
+        .get();
+}
+```
+종종 채널 어댑터는 스프링 integratoin의 여러 엔드포인트 모듈 중 하나에서 제공된다. 예를 들어, 지정된 디렉토리를 모니터링하여 해당 디텍토리에 저장하는 파일을
+file-channel이라는 이름의 채널에 메시지로 전달하는 인바운드 채널 어댑터가 필요하다고 해보자. 이 경우 스프링 통합 파일 엔드포인트 모듈의 FileReadingMessageSource
+를 사용하는 자바 구성으로 사용할 수 있다.
+```java
+@Bean
+@InboundChannelAdapter(channel= "file-channel", poller= @Poller(fixedDelay="1000"))
+public MessageSource<File> fileReadingMessageSource() {
+    FileReadingMessageSource sourceReader = new FileReaderingMessageSource();
+    sourceReader.setDirectory(new File(INPUT_DIR));
+    sourceReader.setFilter(new SimplePatternFileListFilter(FILE_PATTERN));
+    return sourceReader
+}
+```
+DSL에서는 Files 클래스의 inboundAdapter() 메소드를 사용할 수 있다. 아웃바운드 채널 어댑터는 통합 플로우의 말단이며, 최종 메시지를 애플리케이션 혹은 다른 시스템에 넘긴다.
+```java
+@Bean
+public IntegrationFlow fileReaderFlow() {
+    return IntegrationFlows
+        .from(Files.inboundAdapter(new File(INPUT_DIR)).patternFilter(FILE_PATTERN))
+        .get();
+}
+```
+
+메시지 핸들러로 구현되는 서비스 액티베이터는 아웃바운드 채널 어댑터로 자주 사용된다. 특히, 데이터가 애플리케이션 자체에 전달될 필요가 있을 때다. 
+
+## 9.2.9 엔드포인트 모듈
+스프링 통합은 커스텀 어댑터를 생성할 수 있게 해준다. 아래 그 이상의 다양한 엔드포인트 모듈을 스프링 integration이 제공한다.
+
+|       모듈       | 의존성 ID(GroupId : org.springframework.integration) (prefix : spring-integration-) |
+|:--------------:|:--------------------------------------------------------------------------------:|
+|      AMQP      |                             spring-integration-amqp                              |
+| 스프링 어플리케이션 이벤트 |                                      event                                       |
+|   RSS/ Atom    |                                       feed                                       |
+|     파일 시스템     |                                       file                                       |
+|    FTP/FTPS    |                                       ftp                                        |
+|    GemFire     |                                     gemfire                                      |
+|      HTTP      |                                       http                                       |
+|      JDBC      |                                       jdbc                                       |
+|      JPA       |                                       jpa                                        |
+|      JMS       |                                       jms                                        |
+|      이메일       |                                       mail                                       |
+|    MongoDB     |                                     mongodb                                      |
+|      MQTT      |                                       mqtt                                       |
+|     Redis      |                                      redis                                       |
+|      RMI       |                                       rmi                                        |
+|      SFTP      |                                       sftp                                       |
+|     STOMP      |                                      stomp                                       |
+|      스트림       |                                      stream                                      |
+|     Syslog     |                                      syslog                                      |
+|    TCP/UDP     |                                        ip                                        |
+|    Twitter     |                                     twitter                                      |
+|      웹서비스      |                                        ws                                        |
+|    WebFlux     |                                     webflux                                      |
+|   WebSocket    |                                    websocket                                     |
+|      XMPP      |                                       xmpp                                       |
+|   ZooKeeper    |                                    zookeeper                                     |
+
+# 요약
+- 스프링 통합은 플로우를 정의할 수 있게 해준다. 데이터는 애플리케이션으로 들어오거나 나갈 때 플로우를 통해서 처리할 수 있다.
+- 통합 플로우는 XML, Java, Java DSL로 정의할 수 있다.
+- 메시지 게이트웨이와 채널 어댑터는 통합플로우의 입구나 출구가 된다.
+- 메시지는 플로우 내부에서 변환, 분할, 집적, 전달될 수 있으며, 서비스 액티베이터에 의해서 처리될 수 있다.
+- 메시지 채널은 통합 플로우의 컴포넌트들을 연결한다.
+
+
+
