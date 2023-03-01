@@ -26,3 +26,36 @@
 > 그러나 자바 스트림은 대개 동기화되어 있고, 한정된 데이터로 작업을 수행한다.
 > 리액티브 스트림은 무한 데이터셋을 비롯해서 어떤 크기의 데이터셋이건 비동기 처리를 지원한다. 그리고 실시간으로 데이터를 처리하며, 백프레셔를 사용해서 데이터 
 > 전달 폭주를 막는다.
+
+
+리액티브 스트림은 ```Publisher```, ```Subscriber```, ```Subscription```, ```Processor```로 요약할 수 있다. Publisher는 하나의 Susbscription 당 하나의 Subscriber에 발행하는
+데이터를 생성한다.(Unicast) Publisher 인터페이스에는 Subscriber가 Publisher를 구독 신청할 수 있는 ```subscribe()``` 메소드 한 개가 선언되어 있다.
+
+```java
+public interface Publisher<T> {
+    void subscribe(Subscribe<? super T> subscriber);    
+}
+```
+
+그리고 Subscriber가 구독신청되면 Publisher로부터 이벤트를 수신할 수 있다. 이 이벤트들은 Subscriber 인터페이스의 메소드를 통해 전송된다.
+```java
+public interface Subscriber<T> {
+    void onSubscribe(Subscription sub);
+    void onNext(T item);
+    void onError(Throwable ex);
+    void onComplete();
+}
+```
+Subscriber가 수신할 첫 이벤트는 ```onSubscribe()```를 통해서 이뤄진다. Publisher가 onSubscribe()를 호출할 때 이 메소드의 인자로 Subscription 객체를
+Subscriber에게 전달한다. Subscriber는 Subscription 객체를 통해서 구독을 관리할 수 있다.
+
+```java
+public interface Subscription {
+    void request( long n );
+    void cancel();
+}
+```
+
+Subscriber는 request()를 호출하여 전송되는 데이터를 요청하거나, 또는 더 이상 데이터를 수신하지 않고 구독을 취소한다는 것을 나타내기 위해서 cancel()을 호출할 수 있다.
+request()를 호출할 떄 Subscriber는 받고자 하는 데이터 항목 수를 나타내는 long을 인자로 전달한다. 이것이 백프레셔이며, Subscriber 가 처리할 수 있는 것보다 더 많은 데이터를
+Publisher가 전송하는 것을 막는다. 요청된 수의 데이터를 Publisher가 전송한 뒤, Subscriber는 다시 request()를 호출하여 더 많은 요청을 할 수 있다.
