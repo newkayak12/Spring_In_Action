@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="TestCase" tests="1" skipped="0" failures="0" errors="0" timestamp="2023-03-01T12:57:19" hostname="MacBook-Pro.local" time="0.063">
+  <properties/>
+  <testcase name="createAFlux_just()" classname="TestCase" time="0.063"/>
+  <system-out><![CDATA[Apple
+Orange
+Grape
+Banana
+Strawberry
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

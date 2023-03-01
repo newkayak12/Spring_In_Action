@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+}
+
+group 'org.reactive'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    implementation 'io.reactivex.rxjava3:rxjava:3.1.5'
+    implementation 'io.projectreactor:reactor-core:3.4.23'
+    testImplementation 'io.projectreactor:reactor-test:3.4.23'
+}
+
+test {
+    useJUnitPlatform()
+}
