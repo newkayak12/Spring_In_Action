@@ -146,3 +146,122 @@ public void useStepVerifier(){
             .verifyComplete();
 }
 ```
+이 경우 StepVerifier가 fruitFlux를 구독한 후 각 데이터 항목이 기대한 과일 이름과 일치하는 Assertion을 적용한다. 그리고 fruitFlux가 완전한지 검사한다.
+
+
+### 컬렉션으로부터 생성하기
+Flux는 배열, Iterable 객체, 자바 stream으로부터 생성될 수도 있다.
+
+```java
+@Test
+public void createFlux_fromArray(){
+    String[] fruits = new String[] {"Apple", "Orange", "Grape", "Banana", "Strawberry"};
+    Flux<String>  fruitFlux = Flux.fromArray(fruits);
+    StepVerifier.create(fruitFlux)
+            .expectNext("Apple")
+            .expectNext("Orange")
+            .expectNext("Grape")
+            .expectNext("Banana")
+            .expectNext("Strawberry")
+            .verifyComplete();
+}
+```
+결과 값은 위의 예와 같다.```java.util.List```, ```java.util.Set``` 또는 ```java.lang.Iterable```의 다른 구현 컬렉션으로부터 Flux를 생성해야 한다면
+해당 컬렉션을 인자로 전달하여 static 메소드인 fromIterable()을 호출하면 된다.
+
+```java
+@Test
+public void createFlux_fromIterable(){
+    List<String> fruitList = new ArrayList<>();
+    fruitList.add("Apple");
+    fruitList.add("Orange");
+    fruitList.add("Grape");
+    fruitList.add("Banana");
+    fruitList.add("Strawberry");
+    Flux<String> fruitFlux = Flux.fromIterable(fruitList);
+    StepVerifier.create(fruitFlux)
+            .expectNext("Apple")
+            .expectNext("Orange")
+            .expectNext("Grape")
+            .expectNext("Banana")
+            .expectNext("Strawberry")
+            .verifyComplete();
+}
+```
+Stream은 fromStream()을 호출하면 된다.
+```java
+    @Test
+    public void createFlux_fromStream(){
+       Stream<String> fruitStream = Stream.of("Apple", "Orange", "Grape", "Banana", "Strawberry");
+        Flux<String> fruitFlux = Flux.fromStream(fruitStream);
+        StepVerifier.create(fruitFlux)
+                .expectNext("Apple")
+                .expectNext("Orange")
+                .expectNext("Grape")
+                .expectNext("Banana")
+                .expectNext("Strawberry")
+                .verifyComplete();
+    }
+```
+
+### Flux 데이터 생성하기
+때로는 데이터 없이 매번 새로운 값으로 증가하는 숫자를 방출하는 카운터 역할의 Flux만 필요한 경우가 있다. 이와 같은 카운터 Flux를 생성할 때는 static 메소드인 range()
+를 사용할 수 있다.
+
+```java
+@Test
+public void createAFlux_Range(){
+    Flux<Integer> intervalFlux = Flux.range(1, 5);
+    StepVerifier.create(intervalFlux)
+                .expectNext(1)
+                .expectNext(2)
+                .expectNext(3)
+                .expectNext(4)
+                .expectNext(5)
+                .verifyComplete();
+}
+```
+
+유사한 예로 interval()이 있다. range() 처럼  interval()도 증가값을 방출하는 Flux를 생성한다. 그러나 시작~종료 값이 아닌 방출 주기를 지정한다.
+
+
+```java
+@Test
+public void createAFlux_interval(){
+    Flux<Long> intervalFlux = Flux.interval(Duration.ofSeconds(1))
+                                  .take(5);
+    StepVerifier.create(intervalFlux)
+            .expectNext(1L)
+            .expectNext(2L)
+            .expectNext(3L)
+            .expectNext(4L)
+            .expectNext(5L)
+            .verifyComplete();
+}
+```
+ 위의 예는 take()로 무한정 방출되는 것을 막는다.
+ 
+## 10.3.2 리액티브 타입 조합하기
+두 개의 리액티브 타입을 결합하거나 Flux 두 개를 이상의 리액티브 타입으로 분할해야 필요가 생길 수 있다. 
+
+### 리액티브 타입 결합하기
+두 개의 Flux를 하나의 Flux로 결합하려면 mergeWith(Rx에서 concat?) 오퍼레이션을 사용하면 된다.
+```java
+ @Test
+public void mergeFluxes() {
+    Flux<String> characterFlux = Flux.just("Garfield", "Kojak", "Barbosa").delayElements(Duration.ofMillis(500));
+    Flux<String> foodFlux = Flux.just("Lasagna", "Lollipops", "Apples").delaySubscription(Duration.ofMillis(250)).delayElements(Duration.ofMillis(500));
+
+    Flux<String> mergedFlux = characterFlux.mergeWith(foodFlux);
+    StepVerifier.create(mergedFlux)
+            .expectNext("Garfield")
+            .expectNext("Lasagna")
+            .expectNext("Kojak")
+            .expectNext("Lollipops")
+            .expectNext("Barbosa")
+            .expectNext("Apples")
+            .verifyComplete();
+}
+```
+일반적으로 Flux는 가능한 빨리 데이터를 방출하지만 위 예시에서는 delayElements로 500밀리초 늦췄다. 또한 foodFlux가 characterFlux 다음 스트리밍을 시작하도록
+foodFlux에 delaySubscription을 사용해서 250밀리초가 지난 후 구독 및 데이터를 방출하도록 했다. 
