@@ -265,3 +265,260 @@ public void mergeFluxes() {
 ```
 일반적으로 Flux는 가능한 빨리 데이터를 방출하지만 위 예시에서는 delayElements로 500밀리초 늦췄다. 또한 foodFlux가 characterFlux 다음 스트리밍을 시작하도록
 foodFlux에 delaySubscription을 사용해서 250밀리초가 지난 후 구독 및 데이터를 방출하도록 했다. 
+
+mergeWith은 소스 Flux 들이 완벽하게 번갈아 방출되도록 할 수 없으므로 zip()을 대신 사용할 수 있다.
+```java
+@Test
+public void zipFluxes() {
+    Flux<String> characterFlux = Flux.just("Garfield", "Kojak", "Barbosa").delayElements(Duration.ofMillis(500));
+    Flux<String> foodFlux = Flux.just("Lasagna", "Lollipops", "Apples").delaySubscription(Duration.ofMillis(250)).delayElements(Duration.ofMillis(500));
+
+    Flux<Tuple2<String, String>> zippedFlux = Flux.zip(characterFlux, foodFlux);
+    StepVerifier.create(zippedFlux)
+            .expectNextMatches(p ->
+                        p.getT1().equals("Garfield") &&
+                        p.getT2().equals("Lasagna")
+                    )
+            .expectNextMatches(p ->
+                    p.getT1().equals("Kojak") &&
+                            p.getT2().equals("Lollipops")
+            )
+            .expectNextMatches(p ->
+                    p.getT1().equals("Barbosa") &&
+                            p.getT2().equals("Apples")
+            )
+            .verifyComplete();
+}
+```
+zip은 정적인 연산자고 번갈아가며 조합된다. zip으로 방출되는 요소들은 Tuple(컨테이너)이며, 각 소스 Flux가 순서대로 방출하는 항목을 포함한다. Tuple이 싫다면
+마지막인자로 BiFunction을 전달하면 원하는 대로 연산하여 방출할 수 있다.
+```java
+@Test
+public void zipFluxesToObj() {
+    Flux<String> characterFlux = Flux.just("Garfield", "Kojak", "Barbosa").delayElements(Duration.ofMillis(500));
+    Flux<String> foodFlux = Flux.just("Lasagna", "Lollipops", "Apples").delaySubscription(Duration.ofMillis(250)).delayElements(Duration.ofMillis(500));
+
+    Flux<Object> zippedFlux = Flux.zip(characterFlux, foodFlux, (s1, s2) -> String.format("%s eats %s", s1, s2));
+    StepVerifier.create(zippedFlux)
+            .expectNext("Garfield eats Lasagna")
+            .expectNext("Kojak eats Lollipops")
+            .expectNext("Barbosa eats Apples")
+            .verifyComplete();
+}
+```
+
+### 먼저 값을 방출하는 리액티브 타입 선택
+두 개의 Flux 객체가 있는데, 이것을 결합하는 대신 먼저 값을 방출하는 소스 Flux의 값을 발행하는 새로운 Flux를 생성하고 싶다고 해보자. fisrt() 연산자는 두 FLux
+중에서 먼저 값을 방출하는 Flux의 값을 선택해서 이 값을 발행한다.
+
+```java
+@Test
+public void firstFlux() {
+    Flux<String> slowFlux = Flux.just("tortoise", "snail", "sloth").delaySubscription(Duration.ofMillis(100));
+    Flux<String> fastFlux = Flux.just("hare", "cheetah", "squirrel");
+
+    Flux<String> firstFlux = Flux.firstWithSignal(slowFlux, fastFlux);
+    StepVerifier.create(firstFlux)
+            .expectNext("hare")
+            .expectNext("cheetah")
+            .expectNext("squirrel")
+            .verifyComplete();
+}
+```
+first()를 이용하여 새로운 Flux를 사용한다. 이 Flux는 먼저 값을 방출하는 소스 Flux의 값만 발행한다. first()는 느린 Flux는 무시하고 빠른 Flux만 방출한다.
+
+## 10.3.3 리액티브 스트림의 변환과 필터링
+데이터가 흐르는 동안 필터링/ 매핑해야할 경우가 있다.
+
+### 리액티브 타입으로부터 데이터 필터링하기
+Flux로부터 데이터가 전달될 때 이를 필터링하는 가장 기본적인 방법은 맨 앞부터 원하는 개수의 항목을 무시하는 것이다. 이때 ```skip()```을 사용한다.
+skip()은 지정된 수만큼 Flux 방출을 건너띈 후 나머지 항목을 방출하는 새로운 Flux를 생성한다.
+
+```java
+@Test
+public void skipAFew(){
+Flux<String> skipFlux = Flux.just("one", "two", "skip a few", "ninety nine", "hundred").skip(3);
+
+StepVerifier.create(skipFlux)
+        .expectNext( "ninety nine")
+        .expectNext("hundred")
+        .verifyComplete();
+}
+```
+
+특정 개수가 아닌 일정 시간 경과로도 건너뛸 필요가 있는 경우가 있다. 이때도 skip을 쓴다.
+
+```java
+@Test
+public void skipAFewSeconds(){
+    Flux<String> skipFlux = Flux.just("one", "two", "skip a few", "ninety nine", "hundred")
+            .delayElements(Duration.ofSeconds(1))
+            .skip(Duration.ofSeconds(4));
+
+    StepVerifier.create(skipFlux)
+            .expectNext( "ninety nine")
+            .expectNext("hundred")
+            .verifyComplete();
+}
+```
+skip() 연산자 반대 기능이 필요하다면 take()를 고려해볼만 하다.
+
+```java
+@Test
+public void take(){
+    Flux<String> nationalParkFlux = Flux.just("YellowStone", "Yosemite", "Grand Canyon", "Zion", "Grand Teton").take(3);
+    StepVerifier.create(nationalParkFlux).expectNext("YellowStone", "Yosemite", "Grand Canyon").verifyComplete();
+}
+```
+take()도 시간을 기준으로 할 수 있다. 
+```java
+@Test
+public void takeSeconds(){
+    Flux<String> nationalParkFlux = Flux.just("YellowStone", "Yosemite", "Grand Canyon", "Zion", "Grand Teton")
+            .delayElements(Duration.ofSeconds(1))
+            .take(Duration.ofMillis(3500));
+    StepVerifier.create(nationalParkFlux).expectNext("YellowStone", "Yosemite", "Grand Canyon").verifyComplete();
+}
+```
+이는 일종의 필터링으로도 볼 수 있는데 더 범용적 필터링은 ```filter()```로 진행하면 된다. filter의 파리미터(Predicate)을 기반으로 필터링할 수 있다.
+```java
+@Test
+public void filter(){
+    Flux<String> nationalParkFlux = Flux.just("YellowStone", "Yosemite", "Grand Canyon", "Zion", "Grand Teton")
+                    .filter(n -> !n.contains(" "));
+    StepVerifier.create(nationalParkFlux).expectNext("YellowStone", "Yosemite", "Zion").verifyComplete();
+}
+```
+
+경우에 따라서 이미 발행되어 수신된 항목을 필터링할 필요도 있을 것이다. ```distinct()```로 발행된 적이 없는 Flux만 발행할 수도 있다.
+
+````java
+@Test
+public void distinct(){
+    Flux<String> animalFlux = Flux.just("dog", "cat", "bird", "dog", "bird", "anteater").distinct();
+    StepVerifier.create(animalFlux)
+            .expectNext("dog", "cat", "bird", "anteater")
+            .verifyComplete();
+}
+````
+
+### 리액티브 데이터 매핑하기
+Flux, Mono에 가장 많이 사용하는 연산자 중 하나는 발행된 항목을 다른 형태, 타입으로 매핑하는 것이다. 이런 경우 ```flat()```, ```flatMap()``` 연산자를 제공한다.
+map() 오퍼레이션은 변환을 수행하는 Flux를 생성한다.
+
+```java
+@Test
+public void map(){
+    Flux<List<String>> playerFlux = Flux.just("Michael Jordan", "Scottie Pippen", "Steven Kerr")
+            .map(n -> Arrays.asList(n.split(" ")[0], n.split(" ")[1]));
+    StepVerifier.create(playerFlux)
+            .expectNext(Arrays.asList("Michael", "Jordan"))
+            .expectNext(Arrays.asList("Scottie", "Pippen"))
+            .expectNext(Arrays.asList("Steven", "Kerr"))
+            .verifyComplete();
+}
+```
+
+map()에 지정된 함수로 가공을 해서 List<String>을 발행한다. map()에서 중요한 것은 각 항목이 소스 Flux로부터 발행될 때 동기적으로 매핑이 수행된다는 것이다.
+따라서 비동기적으로 매핑을 수행하고 싶다면 flatMap()을 사용해야 한다.
+
+그러나 flatMap()은 각 객체를 새로운 Mono, Flux로 매핑하며, 해당 Mono나 Flux들의 결과는 하나의 새로운 Flux가 된다.
+flatMap()을 subscribeOn()과 함께 사용하면 리액터 타입의 변환을 비동기적으로 수행할 수 있다.
+
+```java
+@Test
+public void flatMap() {
+    Flux<List<String>> playerFlux = Flux.just("Michael Jordan", "Scottie Pippen", "Steven Kerr")
+            .flatMap(a -> Mono.just(a)
+                    .map(n -> Arrays.asList(n.split(" ")[0], n.split(" ")[1]))
+                    .subscribeOn(Schedulers.parallel())
+            );
+    List<List<String>> playerList = Arrays.asList(
+            Arrays.asList("Michael", "Jordan"),
+            Arrays.asList("Scottie", "Pippen"),
+            Arrays.asList("Steven", "Kerr")
+    );
+
+    StepVerifier.create(playerFlux)
+            .expectNextMatches(p -> playerList.contains(p))
+            .expectNextMatches(p -> playerList.contains(p))
+            .expectNextMatches(p -> playerList.contains(p))
+            .verifyComplete();
+}
+```
+
+다시 언급하지만 map은 1:1로 동기적으로 flatMap은 1:N으로 비동기적으로 작동한다. map은 원소를 하나씩 받으며, flatMap은 array, object의 원소를 단일 원소 스트림으로 반환한다.
+subscribeOn()은 구독이 동시적으로 처리되어야 한다는 것을 지정한다. 리액터는 어떤 특정 동시성 모델도 강요하지 않으며 우리가 사용하기 원하는 동시성 모델을 subscribeOn()의
+인자로 지정할 수 있다. 이 때 Schedulers의 static 메소드 중 하나를 사용한다.
+
+#### Schedulers의 동시성 모델
+| Schedulers 메소드 |                                            개요                                            |
+|:--------------:|:----------------------------------------------------------------------------------------:|
+|  .immediate()  |                                    현재 쓰레드에서 구독을 실행한다.                                    |
+|   .single()    |                  단일의 재사용 가능한 쓰레드에서 구독을 실행한다. 모든 호출자에 대해 동일한 쓰레드를 재사용한다.                  |
+|  .newSingle()  |                                매 호출마다 전용 쓰레드에서 구독을 실행한다.                                 |
+|   .elastic()   | 무한하고 신축성 있는 풀에서 가져온 작업 쓰레드에서 구독을 실행한다. 필요 시 새로운 작업 쓰레드가 생성되며, 유휴 쓰레드는 제거된다.(기본적으로 60초 후) |
+|  .parallel()   |                  고정된 크기의 풀에서 가져온 작업 쓰레드에서 구독을 실행하며, CPU 코어의 개수가 크기가 된다.                  |
+
+flatMap()이나 subscribe()을 사용할 떄의 장점은 다수의 병행 쓰레드에 작업을 분할하여 스트림의 처리량을 증가시킬 수 있다. 그러나 작업이 병행으로 수행되므로
+어떤 작업이 먼저 끝날지 보장이 안된다.
+
+### 리액티브 스트림의 데이터 버퍼링하기
+Flux를 통해 전달되는 데이터를 처리하는 동안 데이터 스트림을 작은 덩어리로 분할하면 도움이 될 수 있다.  ```buffer()``` 연산자를 사용한다.
+```java
+@Test
+public void buffer(){
+    Flux<String> fruitFlux = Flux.just("apple", "orange", "banana", "kiwi", "strawberry");
+    Flux<List<String>> bufferedFlux = fruitFlux.buffer(3);
+
+    StepVerifier.create(bufferedFlux)
+            .expectNext(Arrays.asList("apple", "orange", "banana"))
+            .expectNext(Arrays.asList("kiwi", "strawberry"))
+            .verifyComplete();
+}
+```
+지정한 버퍼만큼 새로운 Flux로 버퍼링한다. 이렇게 buffer를 사용하고 flatMap과 같이 사용하면 List 컬렉션을 병행 처리할 수 있다.
+```java
+@Test
+public void buffer2(){
+    Flux.just("apple", "orange", "banana", "kiwi", "strawberry")
+        .buffer(3)
+        .flatMap( x ->
+            Flux.fromIterable(x).map(y -> y.toUpperCase())
+                .subscribeOn(Schedulers.parallel())
+                .log()
+        ).subscribe();
+}
+```
+
+buffer를 사용하면 새로운 Flux로 버퍼링하지만 이 Flux는 List를 포함한다. 그러나 그 다음 flatMap으로 풀어헤쳐서 새로운 Flux를 만들고 map을 적용한다.
+만약 Flux가 방출하는 모든 항목을 List로 모을 필요가 있다면 인자를 전달하지 않고 ```buffer()```를 호출하면 된다.
+이 경우 소스 Flux가 발행한 모든 항목을 포함하는 List를 방출하는 새로운 Flux가 생성된다. ```collectList()```를 사용해도 같은 결과를 얻을 수 있다.
+```collectList()```는 List를 발행하는 Flux 대신 Mono를 생성한다.
+
+```java
+@Test
+public void collectList() {
+    Flux<String> fruitFlux = Flux.just("apple", "orange", "banana", "kiwi", "strawberry");
+    Mono<List<String>> fruitListMono = fruitFlux.collectList();
+    
+    StepVerifier.create(fruitListMono).expectNext(Arrays.asList("apple", "orange", "banana", "kiwi", "strawberry")).verifyComplete();
+}
+```
+
+Flux 방출 항목을 모으는 다른 방법으로 collectMap()이 있다.
+```java
+@Test
+public void collectMap(){
+    Flux<String> animalFlux = Flux.just("aardvark", "elephant", "koala", "eagle", "kangaroo");
+    Mono<Map<Character, String>> animalMono = animalFlux.collectMap(a -> a.charAt(0));
+
+    StepVerifier.create(animalMono).expectNextMatches(map ->
+                map.size() == 3
+                && map.get('a').equals("aardvark")
+                && map.get('e').equals("eagle")
+                && map.get('k').equals("kangaroo")
+    ).verifyComplete();
+}
+```
+## 10.3.4 리액티브 타입에 로직 오퍼레이션 수행하기
