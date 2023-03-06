@@ -522,3 +522,43 @@ public void collectMap(){
 }
 ```
 ## 10.3.4 리액티브 타입에 로직 오퍼레이션 수행하기
+Mono나 Flux가 발행한 항목이 어떤 조건과 일치하는가만 알아야할 때도 있다. 이때는 ```any()```, ```all()``` 오퍼레이션이 그런 로직을 수행한다.
+````java
+@Test
+public void all() {
+    Flux<String> animalFlux = Flux.just("aardvark", "elephant", "koala", "eagle", "kangaroo");
+    Mono<Boolean> hasAMono = animalFlux.all( a -> a.contains("a"));
+    StepVerifier.create(hasAMono)
+            .expectNext(true)
+            .verifyComplete();
+
+    Mono<Boolean> hasKMono = animalFlux.all( a -> a.contains("k"));
+    StepVerifier.create(hasKMono)
+            .expectNext(false)
+            .verifyComplete();
+}
+````
+첫 번째는 "a"가 들어있는 것을 검사한다. 모든 단어에  "a"가 들어 있으면 true 아니면 false다.
+
+```java
+@Test
+public void any() {
+    Flux<String> animalFlux = Flux.just("aardvark", "elephant", "koala", "eagle", "kangaroo");
+    Mono<Boolean> hasTMono = animalFlux.any( a -> a.contains("t"));
+    StepVerifier.create(hasTMono)
+            .expectNext(true)
+            .verifyComplete();
+
+    Mono<Boolean> hasZMono = animalFlux.any( a -> a.contains("z"));
+    StepVerifier.create(hasZMono)
+            .expectNext(false)
+            .verifyComplete();
+}
+```
+any는 하나라도 포함되면 true, 아니면 false를 방출한다.
+
+
+## 요약
+- 리액티브 프로그래밍에서는 데이터가 흘러가는 파이프라인을 새엇ㅇ한다.
+- 리액티브 스트림은 Publisher, Subscriber, Subscription, Transformer의 네 가지 타입을 정의한다.
+- 프로젝트 리액터는 리액티브 스트림을 구현하며, 수많은 오퍼레이션을 제공하는 Flux, Mono의 두 가지 타입으로 스트림을 정의한다.
