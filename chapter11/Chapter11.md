@@ -145,5 +145,63 @@ saveAll()은 Mono<Taco>를 인자로 받으므로 요청 몸체가 Taco 객체�
 받아서 즉시 Flux<Taco>를 반환한다. 그리고 next()로 Mono<Taco>로 반환된다. 
 
 ## 11.2 함수형 요청 핸들러 정의하기
+MVC의 어노테이션 기반 프로그래밍 모델은 몇 가지 단점이 있다.
 
+우선 어노테이션이 '무엇을 하는지'와 '어떻게 해야하는지'를 정의하는 데 괴리가 있다. 어노테이션 자체는 무엇을 정의하며 어떻게는 프레임워크 코드 어딘가에 정의되어 있다.
+이로 인해 프로그래밍 모델을 커스터마이징하거나 확장할 때 복잡해진다. 이런 변경을 하려면 어노테이션 외부에 있는 코드로 작업해야하기 때문이다. 게다가 이런 코드의 디버깅은
+까다롭다. 어노테이션을 breakpoint로 잡을 수 없기 때문이다. 또한 처음 스프링을 입문하면 어노테이션을 사용하는 환경이 적응하기 어렵다.
 
+이런 이유로 WebFlux에서는 리액티브 API를 정의하기 위한 새로운 함수형 프로그래밍 모델이 소개됐다. 어노테이션이 아닌 요청을 핸들러 코드에 연관시킨다.
+
+- RequestPredicate: 처리될 요청의 종류를 선언한다.
+- RouterFunction: 일치하는 요청이 어떻게 핸들러에 전달되어야 하는지 선언한다.
+- ServerRequest: HTTP 요청을 나타내며, 헤더와 바디 정보를 사용할 수 있다.
+- ServerResponse: HTTP 응답을 나타내며 헤더와 바디 정보를 포함한다.
+
+```java
+@Configuration
+public class RouterFunctionConfig {
+
+    @Bean
+    public RouterFunction<?> helloRouterFunction() {
+        return route(GET("/hello"), request -> ok().body(Mono.just("HELLO WORLD!"), String.class));
+    }
+}
+```
+@Configuration이 지정된 RouterFunctionConfig 클래스에는 RouterFunction<?> 타입의 @Bean이 있다. RouterFunction은 요청을 나타내는 RequestPredicate 객체가 어떤 요청 처리 함수와
+연관되는지를 선언한다. 
+
+RouterFunction의 route()는 두 개의 인자를 받는다 하나는 RequestPredicate 객체이고, 다른 하나는 일치하는 요청을 처리하는 함수이다. 여기서는 "/hello" 경로의 GET 요청과 일치하는 
+RequestPredicate을 RequestPredicates의 GET() 메소드가 선언된다.
+
+두 번쨰 인자로 전달된 핸들러는 메소드 참조가 될 수도 있지만 위 예시는 람다로 처리했다. 요청 처리 람다에서는 ServerRequest를 인자로 받으며, ServerResponse의 ok()
+메소드와 이 메소드에서 반환된 BodyBuilder의 body()를 사용해서 ServerResponse를 반환한다. 
+
+이 코드에서 helloRouterFunction() 메소드는 한 종류의 요청만 처리하는 RouterFunction을 반환 타입으로 선언한다. 그러나 다른 종류의 요청을 처리해야 하더라도 또 다른 @Bean
+을 작성할 필요가 없다. 대신에 andRoute()를 호출하여 또 다른 RequestPredicate 객체가 어떤 요청 처리 함수와 연관되는지만 선언하면 된다.
+
+```java
+
+@Configuration
+public class RouterFunctionConfig {
+
+    @Bean
+    public RouterFunction<?> helloRouterFunction() {
+        return route(GET("/hello"), request -> ok().body(Mono.just("HELLO WORLD!"), String.class))
+                .andRoute(GET("/bye"), request -> ok().body(Mono.just("SEE YA!"), String.class))
+                .andRoute(GET("/TEST"), this::test);
+    }
+
+    public Mono<ServerResponse> test(ServerRequest request) {
+//        request.bodyToMono()
+//        request.bodyToFlux()
+        return ServerResponse.ok().body("TEST", String.class);
+    }
+}
+```
+
+## 요약
+- 스프링 WebFlux는 리액티브 웹 프레임워크를 제공한다. 이 프레임워크의 프로그래밍 모델은 스프링 MVC가 상당수 반영되었다.
+- Webflux에서는 함수형 프로그래밍 모델을 제공한다.
+- 리액티브 컨트롤러는 WebTestClient로 테스트할 수 있다.
+- WebClient는 RestTemplate의 리액티브 버전이다.
