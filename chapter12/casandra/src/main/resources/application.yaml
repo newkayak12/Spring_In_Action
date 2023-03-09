@@ -1,0 +1,9 @@
+spring:
+  data:
+    cassandra:
+      keyspace-name: reactive
+      schema-action: recreate_drop_unused
+      port: 9042
+      local-datacenter: datacenter1
+      username: cassandra
+      password: cassandra
