@@ -1,4 +1,4 @@
-package com.example.casandra.repository;
+package com.example.casandra.repository.entity;
 
 import lombok.AccessLevel;
 import lombok.Data;

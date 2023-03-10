@@ -1,4 +1,4 @@
-package com.example.casandra.repository;
+package com.example.casandra.repository.entity;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
 import jakarta.validation.constraints.NotNull;

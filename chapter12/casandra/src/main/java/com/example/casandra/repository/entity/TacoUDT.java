@@ -1,4 +1,4 @@
-package com.example.casandra.repository;
+package com.example.casandra.repository.entity;
 
 import lombok.Data;
 import org.springframework.data.cassandra.core.mapping.UserDefinedType;

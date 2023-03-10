@@ -250,3 +250,141 @@ IngredientUDT는 Ingredient클래스와 매우 유사하지만, 엔티티에 매
 2. 해당 클래스는 id를 사용하지 않는다. (사용자 정의 타입은 우리가 원하는 어떤 속성도 가질 수 있지만, 테이블 정의와 갖지 않아도 된다.)
 
 ## 12.2.4 리액티브 카산드라 레포지토리 작성하기
+스프링 데이터로 리액티브가 아닌 레포지토리를 작성할 때는 JPARepository의 도움을 받기 위해서 기본 레포지토리 인터페이스 중 하나를 확장하는 인터페이스를 선언하면 된다.
+그리고 커스텀 쿼리를 추가할 수도 있다. 리액티브 레포지토리도 다르지 않다. 가장 큰 차이점은 다른 종류의 기본 레포지토리를 확장하는 것과
+도메인 타입이나 컬랙션 대신 Mono, Flux 같은 리액티브 타입을 메소드에서 처리하는 거싱다.
+리액티브 카산드라 레포지토리를 작성할 때는 두 개의 기본 인터페이스인 ```ReactiveCassandraRepository``` 혹은 ```ReactiveCrudRepository```를 선택할 수 있다.
+둘 중 어떤 것을 선택하는 가는 레포지토리를 어떻게 사용하느냐에 따라 달렸다. ReactiveCassandraRepository는 ReactiveCrudRepository를 확장하여 새 객체가 저장될 떄
+사용되는 insert()의 몇 가지 변형 버전을 제공하며, 이외에는 ReactiveCrudRepository와 동일한 메소드를 제공한다. 만약 많은 데이터를 추가한다면 
+```ReactiveCassandraRepository```를 선택하면 되고, 그게 아니라면 ```ReactiveCrudRepository```를 선택할 수 있다.
+
+> #### 카산드라 레포지토리는 반드시 리액티브해야하는가?
+> 꼭 그렇지 않다. CassandraRepository,  CrudRepository를 사용하면 된다. 그 다음 Flux, Mono 대신 카산드라 어노테이션이 지정된 도메인
+> 타입이나 도메인 타입이 저장된 컬렉션을 레포지토리 메소드에서 반환하면 된다.
+
+
+```java
+public interface IngredientRepository  extends ReactiveCassandraRepository<Ingredient, String> {
+}
+```
+
+Reactive가 붙으면 Flux, Mono를 받고 반환한다는 것을 잊으면 안된다.
+```java
+@RestController
+@RequestMapping(value = "/ingredient")
+@RequiredArgsConstructor
+public class IngredientController {
+    private IngredientRepository ingredientRepository;
+
+
+    @GetMapping(value = "/")
+    public Flux<Ingredient> allIngredients(){
+        return ingredientRepository.findAll();
+    }
+
+}
+```
+
+```java
+public interface UserRepository extends ReactiveCassandraRepository<User, UUID> {
+    @AllowFiltering
+    Mono<User> findUserByUsername(String username);
+}
+```
+위 예시는 리액티브 레포지토리이므로 findUserByUsername()에서 User를 반환하면 안된다. 따라서 Mono<User>를 반환하도록 변경하면 된다.
+또한 카산드라의 특성상 관계형 DB에서 하듯 'where ~'로하는 필터링은 느리게 처리될 수 있다. 물론 필요할 떄가 있다.
+이때, ```@AllowFiltering``` 어노테이션을 사용하면 된다.
+
+@AllowFiltering을 지정하지 않은 findUserByUsername()의 경우
+
+>  SELECT * FROM USER WHERE username = '사용자명';
+
+그라나 카산으라는 where을 사용하지 않는다. 따라서 @AllowFiltering 어노테이션을 findUserByUsername()에 지정하면
+
+> SELECT * FROM USER WHERE username = '사용자명' allow filtering;
+
+쿼리 끝의 ```allow filtering``` 절은 '쿼리 성능에 잠재적인 영향을 준다는 것을 알고 있지만 어쨋든 수행해야 한다'는 것을 카산드라에 알린다.
+
+
+## 12.3 리액티브 몽고 DB 레포지토리 작성하기
+카산드라가 테이블의 row로 데이터를 저장하는 반면, 몽고DB는 문서형 데이터베이스이다. 더 자세히 말해서, 몽고 DB는 BSON(Binary JSON) 형식의 문서로 데이터를
+저장하며, 다른 DB에서 데이터를 질의하는 것과 유사한 방법으로 쿼리할 수 있다.
+
+역시 몽고 DB도 관계형 DB는 아니다. 따라서 데이터를 모델링하는 방법은 물론이고 관리하는 방법도 타 DB와 다르다. 그렇기는 하지만 몽고 DB를 스프링 데이터로 사용하는 것은
+별반 다르지 않다. 즉, 도메인 타입을 문서 구조로 매핑하는 어노테이션을 도메인 클래스에 지정한다. 그리고 JPA 방식대로 인터페이스를 작성하면 된다.
+
+```shell
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'io.projectreactor:reactor-test'
+}
+```
+와 같이 의존성을 추가하면 된다. 기본적으로 스프링 데이터 몽고 DB는 기본 포트를 27017로 잡는다. H2같이 내장 몽고 DB를 사용할 수도 있는데, 
+```Flapdoodle``` 내장 몽고 DB를 의존성에 추가하면 된다.
+
+```yaml
+spring:
+  data:
+    mongodb:
+      host: ##기본값 localhost
+      port: ##기본값 27017
+      username: ##ID
+      password: ##PASSWORD
+      database: ## 기본값 test
+```
+```java
+@Data
+@RequiredArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE, force = true)
+@Document(collection = "ingredients") // 지정된 도메인 타입을 몽고 DB 저장 문서로 선언된다.
+                                      //collection을 지정하면 컬렉션 명을 지정할 수 있다.
+public class Ingredient {
+
+    @Id //문서 ID //Serializable 타입인 어떤 속성도 사용 가능
+    private final String id;
+    @Field
+    private final String name;
+    @Field
+    private final Type type;
+
+    public static enum Type {
+        WRAP, PROTEIN, VEGGIES, CHEESE, SAUCE
+    }
+}
+```
+카산드라에서 사용자 정의 타입 사용하기는 꽤나 까다로왔지만 몽고DB는 수월하다.
+
+```java
+
+@Data
+@RestResource(rel="tacos", path = "tacos")
+@Document
+public class Taco {
+    @Id
+    private String id;
+    
+    @NotNull
+    @Size(min = 5, message = "Name must be a least 5 character long")
+    private String name;
+    
+    private Date createdAt  = new Date();
+    
+    @Size(min = 1, message = "You must choose at least 1 ingredient")
+    private List<Ingredient> ingredients;
+}
+```
+그냥 Pojo를 선언하듯 선언하면 기본키처리, 사용자 정의 타입 모두 해결된다. 그러나 일단 명심해야할 것은 ```@Id```의 타입은 ```Serializable```을 구현해야 한다.
+여기서 String을 사용한 것은 몽고 DB가 자동으로 이 부분을 처리해주기 때문이다.
+두 번째는 JPA 같이 List<Ingredient> 이지만 별도의 몽고 DB 컬렉션에 저장하는 것이 아닌 카산드라와 유사하게 비정규화된 상태로 문서에 직접 저장된다.
+
+## 12.3.3 리액티브 몽고DB 레포지토리 인터페이스 작성하기
+스프링 데이터 몽고 DB는 스프링 데이터 JPA 및 스프링 데이터 카산드라가 제공하는 것과 유사한 자동 레포지토리 지원을 제공한다. 몽고 DB의 리액티브 레포지토리를 작성할
+떄는 ReactiveCrudRepository나 ReactiveMongoRepository를 선택할 수 있다. 둘 간의 차이는 ReactiveCrudRepository가 새로운 문서, 기존 문서의
+save() 메소드에 의존하는 반면, ReactiveMongoRepository는 새로운 문서 저장에 최적화된 소수의 특별한 insert를 제공한다.
+
+> ### 리액티브가 아닌 몽고DB 레포지토리는 어떨까?
+> 
