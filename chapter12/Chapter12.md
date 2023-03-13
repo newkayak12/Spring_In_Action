@@ -387,4 +387,41 @@ public class Taco {
 save() 메소드에 의존하는 반면, ReactiveMongoRepository는 새로운 문서 저장에 최적화된 소수의 특별한 insert를 제공한다.
 
 > ### 리액티브가 아닌 몽고DB 레포지토리는 어떨까?
+>  역시 ReactiveCrudRepository나 ReactiveMongoRepository 대신 CrudRepository, MongoRepository를 확장하는 레포지토리 인터페이스를 작성하면 된다.
 > 
+>
+
+
+```java
+@CrossOrigin(origins = "*")
+public interface IngredientRepository extends ReactiveCrudRepository<Ingredient, String> {
+    
+}
+```
+이는 카산드라에서 사용한 인터페이스와 비슷해보인다. 맞다. 이런 부분이 ReactiveCrudRepostiory 인터페이스를 확장할 때의 장점 중 하나다. 
+위의 IngredientRepository는 리액티브 레포지토리이므로 이 메소드는 그냥 도메인 타입이나 컬렉션이 아닌 Mono, Flux를 처리한다.
+
+
+```java
+
+public interface TacoRepository extends ReactiveMongoRepository<Taco, String> {
+    Flux<Taco> findTacoOrderByCreatedAtDesc();
+    
+}
+```
+ReactiveCrudRepository에 비해 ReactiveMonoRepository를 사용할 떄의 단점은 몽고 DB에 특화되어 다른 DB를 사용할 수 없다는 것이다. 
+위 메소드는 Flux<Taco>를 반환하므로 결과의 페이징을 신경 쓰지 않아도 된다. 대신에 take() 오퍼레이션을 사용해서 일부만 가져올 수 있다.
+
+```java
+Flux<Taco> recents = repo.findTacoOrderByCreatedAtDesc()
+                         .take(12);
+```
+
+```java
+public interface UserRepository extends ReactiveCrudRepository<User,String> {
+    Mono<User> findByUsername(String username);
+}
+```
+
+등과 같이 사용한다.
+
