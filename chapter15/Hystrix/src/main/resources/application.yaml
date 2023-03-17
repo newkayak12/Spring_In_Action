@@ -1,0 +1,11 @@
+management:
+  endpoint:
+    loggers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: hystrix.stream, loggers
+hystrix:
+  dashboard:
+    proxy-stream-allow-list: "*"
