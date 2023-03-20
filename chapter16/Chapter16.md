@@ -175,9 +175,181 @@ neagetiveMatches는 자동-구성이 실패한 것을 의미한다. 마지막으
 필요 없는 속성은 DELETE 요청으로 삭제할 수 있다. 이러한 변경은 일시적이며 재시작시 적용되지 않는다.
 
 ### HTTP 요청 - 매핑 내역 보기
+스프링 MVC의 프로그래밍 모델은 HTTP 요청을 쉽게 처리한다. 그러나 애플리케이션이 처리할 수 있는 모든 HTTP 요청, 그리고 이런 요청들을 어떤 종류의 컴포넌트가 처리하는지를
+전체적으로 파악하기는 어려울 수 있다.
+액츄에이터의 /mappings 엔드포인트는 애플리케이션의 모든 HTTP 요청 핸들러 내역을 제공한다.
+
+### 로깅 레벨 관리하기
+어떤 애플리케이션이든 로깅은 중요한 기능이다. 실행 중인 애플리케이션에서 어떤 로깅레벨이 설정됐는지 궁금하면 /loggers 엔드포인트에 GET을 하면 된다.
+/env와 마찬가지로 POST로 configured 로깅 레벨을 변경할 수 있다.
+```shell
+curl localhost:8080/actuator/loggers/ROOT \
+-d'{"configuredLevel":"WARN"}'\
+-H "Content-type:application/json"
+```
+## 16.2.3 애플리케이션 활동 지켜보기
+애플리케이션이 처리하는 HTTP 요청이나 애플리케이션에 있는 모든 쓰레드의 작동을 포함해서 실행 중인 애플리케이션의 활동을 지켜보는 것은 유용하다.
+이를 위해서 /httptrace, /threaddump, /heapdump 엔드포인트를 제공한다.
+
+/heapdump는 상세하게 나타내기 가장 어려운 액추에이터 엔드포인트이다. 메모리나 쓰레드 문제를 찾는 데 사용할 수 있는 gzip 압축 형태의 HPROF 힙 덤프 파일을 다운로드한다.
 
 
+### HTTP 요청 추적하기
+/httptrace 엔드포인트는 애플리케이션이 처리한 가장 최근의 100개 요청을 알려주며, HTTP 요청 메소드와 경로, 요청이 처리된 시점을 나타내는 타임스탬프,
+요청과 응답 헤더들, 요청 처리 소요 시간 등이 출력된다.
+```java
+@Configuration
+public class Config {
+    @Bean
+    public HttpTraceRepository httpTraceRepository() {
+        return new InMemoryHttpTraceRepository();
+    }
+}
+```
+(✔ 위와 같이 설정하지 않으면 자동으로 설정이 되지 않는 것 같다.)
+
+### 쓰레드 모니터링
+HTTP 요청 추적에 추가하여 실행 중인 애플리케이션에서 무슨 일이 생기는지 결정하는 데 쓰레드의 활동이 유용할 수 있다. /threaddump 엔드포인트는 현재 실행 중인 
+쓰레드에 관한 스냅샷을 제공한다. 완전한 쓰레드 덤프 응답은 실행 중인 애플리케이션의 모든 쓰레드를 포함한다. 
+쓰레드 덤프는 쓰레드의 블로킹, 로킹 과나련 상세 정보와 스택 기록이 포함된다.
 
 
+## 16.2.4 런타임 메트릭 활용하기
+/metric 엔드포인트는 실행 중인 애플리케이션에서 생성되는 온갖 종류의 메트릭을 제공할 수 있으며, 여기에는 메모리, 프로세스, 가비지 컬렉션, HTTP 요청 관련 메트릭 등이 포함된다.
+엑추에이터의 기본으로 제공하는 메트릭의 종류는 굉장히 많다. 
 
+```json
+{
+  "names": [
+    "application.ready.time",
+    "application.started.time",
+    "disk.free",
+    "disk.total",
+    "executor.active",
+    "executor.completed",
+    "executor.pool.core",
+    "executor.pool.max",
+    "executor.pool.size",
+    "executor.queue.remaining",
+    "executor.queued",
+    "http.server.requests",
+    "jvm.buffer.count",
+    "jvm.buffer.memory.used",
+    "jvm.buffer.total.capacity",
+    "jvm.classes.loaded",
+    "jvm.classes.unloaded",
+    "jvm.gc.live.data.size",
+    "jvm.gc.max.data.size",
+    "jvm.gc.memory.allocated",
+    "jvm.gc.memory.promoted",
+    "jvm.gc.overhead",
+    "jvm.gc.pause",
+    "jvm.memory.committed",
+    "jvm.memory.max",
+    "jvm.memory.usage.after.gc",
+    "jvm.memory.used",
+    "jvm.threads.daemon",
+    "jvm.threads.live",
+    "jvm.threads.peak",
+    "jvm.threads.states",
+    "logback.events",
+    "process.cpu.usage",
+    "process.files.max",
+    "process.files.open",
+    "process.start.time",
+    "process.uptime",
+    "system.cpu.count",
+    "system.cpu.usage",
+    "system.load.average.1m",
+    "tomcat.sessions.active.current",
+    "tomcat.sessions.active.max",
+    "tomcat.sessions.alive.max",
+    "tomcat.sessions.created",
+    "tomcat.sessions.expired",
+    "tomcat.sessions.rejected"
+  ]
+}
+```
+등이 있다. 
+예를 들어 http.server.requests를 보면
+`http://localhost/actuator/metrics/http.server.requests` 와 같이 접근하고 특정 태그 이름과 값을 지정하면 해당 값을 포커싱한다.
+`http://localhost/actuator/metrics/http.server.requests?tag=status:500` 와 같이 말이다.
+
+
+## 16.3 액추에이터 커스터마이징
+액추에이터의 가장 큰 특징은 애플리케이션의 특정 요구를 충족하기 위해서 커스터마이징할 수 있다는 것이다.
+
+## 16.3.1 /info 엔드포인트 정보ㅔㅈ공하기
+yaml에 info.으로 시작하는 속성을 생성하면 쉽게 커스텀 데이터를 추가할 수 있다. 
+하지만 그 이외에도 다른 방법이 있다. 스프링 부트는 InfoContributor라는 인터페이스를 제공하며, 이 인터페이스는 우리가 원하는 어떤 정보도 /info 엔드포인트 응답에
+추가할 수 있게 한다. 
+
+### 커스텀 정보 제공자 생성하기
+```java
+@Component
+public class InfoConfig implements InfoContributor {
+    @Override
+    public void contribute(Info.Builder builder) {
+        builder.withDetail("TEST", Map.of("KEY", "VALUE"));
+    }
+}
+```
+위와 같이 구현하면 커스텀 엔드포인트로 지정할 수 있다. 이렇게 하면 /info 엔드포인트에 원하는 정보를 동적으로 추가할 수 있다. 반면 info.는 정적 속성을 추가할 수 있다.
+
+### 빌드 정보를 /info 엔드포인트에 주입하기
+
+스프링 부트에는 /info 엔드포인트 응답에 자동으로 정보를 추가해 주는 몇 가지 InfoContributor 구현체가 포함되어 있다. 이 중에서 BuilderInfoContributor가 
+있는데 이는 프로젝트 빌드 파일의 정보를 /info에 추가해준다.
+
+Maven
+```xml
+<build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+```
+Gradle
+```shell
+springBoot {
+  buildInfo()
+}
+```
+메이븐, 그래들 중 어떤 방법을 사용하든 빌드가 끝나면 WAR, JAR에 build-info.properties가 생성된다. 그리고 /info 엔드포인트에 응답이 반환된다.
+
+## 16.3.2 커스텀 건강 지표 정의하기
+스프링 부트에는 몇 가지 건강 지표가 포함되어 있으며, 이 건강 지표들은 스프링 애플리케이션에 통합할 수 있는 많은 외부 시스템의 건강 상태 정보를 제공한다. 그러나 
+때도로는 스프링 부트에서 지원하지 않거나 건강 지표를 제공하지 않는 외부 시스템을 사용하는 경우가 생길 수 있다.
+
+예를 들어, 현 애플리케이션이 기존 레거시 메인프레임 애플리케이션과 통합될 수 있으며, 이 경우 우리 애플리케이션의 건강 상태는 레거시 시스템의 건강 상태에
+영향을 받을 수 있다. 커스텀 건강 지표를 생성할 때는 HealthIndicator 인터페이스를 구현하는 빈만 생성하면 된다.
+
+```java
+@Component
+public class HealthConfig implements HealthIndicator {
+
+    @Override
+    public Health health() {
+        Random random = new Random(10);
+        Integer randomNumber = random.nextInt();
+        if(randomNumber >= 0 && randomNumber < 5){
+            return Health.up().build();
+        } else {
+            return Health.down().withDetail("reason", "test").build();
+        }
+    }
+}
+```
+
+## 16.3.3 커스텀 메트릭 등록하기
 

@@ -2,7 +2,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: '*'
+        include: "*"
   endpoint:
     health:
       show-details: always
@@ -10,3 +10,8 @@ management:
       enabled: true
       post:
         enabled: true
+    httptrace:
+      enabled: true
+#  trace:
+#    http:
+#      enabled: true
