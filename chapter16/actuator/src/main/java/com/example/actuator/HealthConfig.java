@@ -13,10 +13,11 @@ public class HealthConfig implements HealthIndicator {
     public Health health() {
         Random random = new Random(10);
         Integer randomNumber = random.nextInt();
-        if(randomNumber >= 0 && randomNumber < 5){
-            return Health.up().build();
-        } else {
-            return Health.down().withDetail("reason", "test").build();
-        }
+//        if(randomNumber >= 0 && randomNumber < 5){
+//            return Health.up().build();
+//        } else {
+//            return Health.down().withDetail("reason", "test").build();
+//        }
+        return Health.up().build();
     }
 }

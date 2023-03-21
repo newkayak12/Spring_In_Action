@@ -1,0 +1,13 @@
+2023-03-21 22:32:59.888  INFO 71960 --- [main] c.example.actuator.ActuatorApplication   : Starting ActuatorApplication using Java 11.0.18 on MacBook-Pro.local with PID 71960 (/Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator/target/classes started by sanghyeonkim in /Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator)
+2023-03-21 22:32:59.893  INFO 71960 --- [main] c.example.actuator.ActuatorApplication   : No active profile set, falling back to 1 default profile: "default"
+2023-03-21 22:33:00.371  INFO 71960 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2023-03-21 22:33:00.375  INFO 71960 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-03-21 22:33:00.375  INFO 71960 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.71]
+2023-03-21 22:33:00.406  INFO 71960 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-03-21 22:33:00.406  INFO 71960 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 493 ms
+2023-03-21 22:33:00.658  INFO 71960 --- [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 17 endpoint(s) beneath base path '/actuator'
+2023-03-21 22:33:00.681  INFO 71960 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2023-03-21 22:33:00.691  INFO 71960 --- [main] c.example.actuator.ActuatorApplication   : Started ActuatorApplication in 1.021 seconds (JVM running for 1.269)
+2023-03-21 22:33:01.065  INFO 71960 --- [RMI TCP Connection(2)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-03-21 22:33:01.065  INFO 71960 --- [RMI TCP Connection(2)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-03-21 22:33:01.066  INFO 71960 --- [RMI TCP Connection(2)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms

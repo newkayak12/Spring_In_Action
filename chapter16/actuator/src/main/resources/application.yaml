@@ -1,3 +1,11 @@
+logging:
+  charset:
+    file: UTF-8
+  file:
+    name: log
+
+
+
 management:
   endpoints:
     web:
@@ -12,6 +20,26 @@ management:
         enabled: true
     httptrace:
       enabled: true
+    shutdown:
+      enabled: true
+    startup:
+      enabled: true
+    logfile:
+#      external-file: logs/logback.log
+      enabled: true
+  health:
+    readinessstate:
+      enabled: true
+
 #  trace:
 #    http:
 #      enabled: true
+
+#spring:
+#  application:
+#    name: test
+#  boot:
+#    admin:
+#      client:
+#        url:
+#          - http://localhost:8082

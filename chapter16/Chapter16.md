@@ -352,4 +352,163 @@ public class HealthConfig implements HealthIndicator {
 ```
 
 ## 16.3.3 커스텀 메트릭 등록하기
+/metrics는 내장된 메트릭에만 국한되지 않는다. 궁극적으로 액추에이터 매트릭은 Micrometer에 의해서 구현된다. 이는 벤더 중립적인 메트릭이며, 애플리케이션이 원하는 어떤
+메트릭도 발행하여 서드파티 모니터링 시스템에서 보여줄 수 있다.
 
+Micrometer로 메트릭을 발행하는 가장 기본적인 방법은 Micrometer의 MeterRegistry를 사용하는 것이다. 스프링 부트 애플리케이션에서 메트릭을 발행할 때는 어디든
+필요한 곳에 MetricRegistry만 주입하면 된다.
+
+```java
+@Component
+public class TacoMetrics extends AbstractRepositoryEventListener<Taco>{
+    private MeterRegistry meterRegistry;
+    public TacoMetrics(MeterRegistry meterRegistry){
+        this.meterRegistry = meterRegistry;
+    }
+    
+    @Override
+    protected void onAfterCreate(Taco taco){
+        List<Ingredient> ingredients = taco.getIngredients();
+        for( Ingredient ingredient : ingredients ){
+            meterRegistry.counter("tacoCloud", "ingredient", ingredient.getId()).increament();
+        }
+    }
+}
+```
+
+등과 같이 구현하면 된다.(메트릭도 사용할 수 있는 부분이 따로 있는 것으로 보인다.)
+
+## 16.3.4 커스텀 엔드포인트 생성하기
+엔드포인트는 HTTP 요청을 처리하는 것은 물론이고 JMXMBeans로도 노출되어 사용될 수 있다. 따라서 엔드포인트는 컨트롤러 클래스 이상의 것이다.
+실제로 액추에이터 엔드포인트는 컨트롤러와 매우 다르게 정의된다. `@Controller`, `@RestController` 어노테이션으로 지정되는 클래스 대신, 액추에이터
+엔드포인트는 `@Endpoint`로 지정되는 클래스로 정의된다. 또는 GET, POST, PUT, DELETE 등과 달리 액추에이터 엔드포인트 오퍼레이션은 `@ReadOperation`,
+`@WriteOperation`, `@DeleteOperation` 어노테이션이 지정된 메소드로 정의된다. 또한, 이 어노테이션들은 어떤 특정 통신 메커니즘도 수반하지 않으므로 액추
+에이터가 다양한 통신 메커니즘(HTTP, JMX)으로 통신할 수 있다. 
+```java
+
+import org.springframework.boot.actuate.endpoint.annotation.DeleteOperation;
+import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
+import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
+import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Component
+@Endpoint(id = "test", enableByDefault = true)
+public class CustomEndpoint {
+    private List<String> array = new ArrayList<>();
+
+    @ReadOperation
+    public String readTest(){
+        return array.stream().collect(Collectors.joining(", "));
+    }
+
+    @WriteOperation
+    public String writeTest(String text){
+        array.add(text);
+        return array.stream().collect(Collectors.joining(", "));
+    }
+
+    @DeleteOperation
+    public String deleteTest(){
+        array.remove(array.size() - 1);
+        return array.stream().collect(Collectors.joining(", "));
+    }
+}
+
+```
+커스텀 엔드포인트는 @Component가 선언되어 있어서 스프링 애플리케이션 컨텍스트의 빈으로 생성된다. 이 클래스는 또한 @EndPoint가 지정되었다. 따라서 
+ID가 test인 액추에이터 엔드포인트가 된다.
+/actuator/{id}로, 메소드에 따라 각 메소드가 반응한다.
+
+여기서는 HTTP 엔드포인트에 한정되어 있다. 그러나 엔드포인트는 MBeans도 노출될 수 있으므로 어떤 JMX 클라이언트에서도 이 엔드포인트를 사용할 수 있다. 만약 HTTP 엔드포인트로만
+제한하고 싶다면 @Endpoint 대신 @WebEndPoint로 지정하면 HTTP 엔드포인트로만 작동한다. 반대로 MBeans로만 제한하고 싶다면 @JmxEndpoint로 지정하면 된다.
+
+
+## 16.4 액추에이터 보안 처리하기
+액추에이터는 다양한 일을 할 수 있다. 따라서 유효한 접근 권한을 갖는 클라이언트만이 엔드포인트를 소비할 수 있도록 액추에이터를 보안 처리하는 것이 좋은 생각이다.
+물론 보안이 중요하지만 보안 자체는 액추에이터의 책임 범위를 벗어난다. 대신에 스프링 시큐리티로 액추에이터 보안 처리를 해야한다.
+
+액추에이터 엔드포인트들은 공통 기본 경로인 /actuator 아래 모여 있으므로 모든 액추에이터 엔드포인트 전반에 인증 규칙을 적용하기 쉽다.
+
+- <strike>WebSecurityConfigurerApdater</strike> (deprecated)
+
+```java
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+
+
+@Configuration
+@EnableWebSecurity
+public class SecurityOld extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests()
+                .antMatchers("/actuator/**")
+                .hasRole("ADMIN").and().httpBasic();
+    }
+}
+```
+- Bean으로 등록
+
+```java
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityLatest {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.authorizeRequests().antMatchers("/actuator/**")
+                .hasRole("ADMIN").and().httpBasic();
+
+        return http.build();
+    }
+}
+```
+
+이 경우 액추에이터에서 엔드포인트를 사용하려면 ROLE_ADMIN 권한을 갖도록 인가한 사용자로부터 요청되어야 한다. 여기서는 또한 클라이언트 애플리케이션이 요청이 
+Authroization 헤더에 암호화된 인증 정보를 제출할 수 있도록 HTTP 기본 인증도 구성하였다.
+
+이처럼 액추에이터 보안을 처리할 때 유일한 문제점은 엔드포인트의 경로가 /actuator/**로 하드 코딩됐다는 점이다. 이런 상황에서 스프링 부트는 EndpointRequest 클래스도 제공한다.
+```java
+@Configuration
+@EnableWebSecurity
+public class SecurityLatest {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.requestMatcher(
+                        EndpointRequest.toAnyEndpoint()
+                                .excluding("health")
+                )
+                .authorizeRequests()
+                .anyRequest()
+                .hasRole("ADMIN").and().httpBasic();
+
+        return http.build();
+    }
+}
+```
+EndpointRequest.toAnyEndPoint()로 엑추에이터 엔드포인트와 일치하는 요청을 반환한다. 또한 excluding()으로 제외를 할 수도 있다.
+혹은 특정 엔드포인트에만 적요아혹 싶다면 `EndpointRequest.to("beans")`와 같이 이름을 인자로 보내면 된다.
+
+
+### 요약
+
+- 스프링 부트 액추에이터는 HTTP, JMX MBeans 모두의 엔포인트를 제공하며 엔드포인트는 스프링 부트 애플리케이션의 내부 활동을 볼 수 있다.
+- 대부분의 액추에이터 엔드포인트는 기본 비활성이나 `management.endpoint.web.exposure.include`, `management.endpoint.web.exposure.exclude`
+로 선택적으로 노출 시킬 수 있다.
+- /loggers, /env 등은 실행 중인 애플리케이션의 구성을 실시간으로 변경하는 쓰기 오퍼레이션을 제공한다. 
+- 애플리케이션의 건강 상태는 외부에 통합된 애플리케이션 건강 상태를 추적하는 커스텀 건강 지표에 의해 영향을 받을 수 있다.
+- 커스텀 애플리케이션 매트릭은 Micrometer를 통해서 등록할 수 있다. Micrometer는 벤더 중립적인 매트릭이며, 애플리케이션이 원하는 어떤 메트릭도
+발행하여 서드 파티 모니터링 시스템에서 보일 수 있다.
+- 스프링 웹 애플리케이션의 다른 엔드포인트와 마찬가지로 엑추에이터 엔드포인트는 스프링 시큐리티를 사용해서 보안을 처리할 수 있다.
