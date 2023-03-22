@@ -19,6 +19,11 @@ ext {
 dependencies {
 	implementation 'de.codecentric:spring-boot-admin-starter-server'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '2.7.9'
+// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.7.9'
+
 }
 
 dependencyManagement {

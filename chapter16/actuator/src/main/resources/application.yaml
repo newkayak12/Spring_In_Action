@@ -35,11 +35,20 @@ management:
 #    http:
 #      enabled: true
 
-#spring:
-#  application:
-#    name: test
-#  boot:
-#    admin:
-#      client:
-#        url:
-#          - http://localhost:8082
+spring:
+  application:
+    name: test
+  boot:
+    admin:
+      client:
+        url:
+          - http://localhost:8082
+        username: admin
+        password: qwer1234!
+#        instance:
+#          metadata:
+#            user:
+#              name: admin
+#              password: qwer1234!
+
+

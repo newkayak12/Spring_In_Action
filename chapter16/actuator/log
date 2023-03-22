@@ -1,13 +1,143 @@
-2023-03-21 22:32:59.888  INFO 71960 --- [main] c.example.actuator.ActuatorApplication   : Starting ActuatorApplication using Java 11.0.18 on MacBook-Pro.local with PID 71960 (/Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator/target/classes started by sanghyeonkim in /Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator)
-2023-03-21 22:32:59.893  INFO 71960 --- [main] c.example.actuator.ActuatorApplication   : No active profile set, falling back to 1 default profile: "default"
-2023-03-21 22:33:00.371  INFO 71960 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
-2023-03-21 22:33:00.375  INFO 71960 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2023-03-21 22:33:00.375  INFO 71960 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.71]
-2023-03-21 22:33:00.406  INFO 71960 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2023-03-21 22:33:00.406  INFO 71960 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 493 ms
-2023-03-21 22:33:00.658  INFO 71960 --- [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 17 endpoint(s) beneath base path '/actuator'
-2023-03-21 22:33:00.681  INFO 71960 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
-2023-03-21 22:33:00.691  INFO 71960 --- [main] c.example.actuator.ActuatorApplication   : Started ActuatorApplication in 1.021 seconds (JVM running for 1.269)
-2023-03-21 22:33:01.065  INFO 71960 --- [RMI TCP Connection(2)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
-2023-03-21 22:33:01.065  INFO 71960 --- [RMI TCP Connection(2)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
-2023-03-21 22:33:01.066  INFO 71960 --- [RMI TCP Connection(2)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-03-22 19:47:04.436  INFO 79800 --- [main] c.example.actuator.ActuatorApplication   : Starting ActuatorApplication using Java 11.0.18 on MacBook-Pro.local with PID 79800 (/Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator/target/classes started by sanghyeonkim in /Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator)
+2023-03-22 19:47:04.446  INFO 79800 --- [main] c.example.actuator.ActuatorApplication   : No active profile set, falling back to 1 default profile: "default"
+2023-03-22 19:47:04.967  INFO 79800 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2023-03-22 19:47:04.972  INFO 79800 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-03-22 19:47:04.972  INFO 79800 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.71]
+2023-03-22 19:47:05.015  INFO 79800 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-03-22 19:47:05.015  INFO 79800 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 541 ms
+2023-03-22 19:47:05.310  INFO 79800 --- [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 17 endpoint(s) beneath base path '/actuator'
+2023-03-22 19:47:05.338  INFO 79800 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2023-03-22 19:47:05.349  INFO 79800 --- [main] c.example.actuator.ActuatorApplication   : Started ActuatorApplication in 1.111 seconds (JVM running for 1.401)
+2023-03-22 19:47:05.604  INFO 79800 --- [RMI TCP Connection(2)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-03-22 19:47:05.605  INFO 79800 --- [RMI TCP Connection(2)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-03-22 19:47:05.606  INFO 79800 --- [RMI TCP Connection(2)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-03-22 19:49:10.819  INFO 79946 --- [main] c.example.actuator.ActuatorApplication   : Starting ActuatorApplication using Java 11.0.18 on MacBook-Pro.local with PID 79946 (/Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator/target/classes started by sanghyeonkim in /Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator)
+2023-03-22 19:49:10.822  INFO 79946 --- [main] c.example.actuator.ActuatorApplication   : No active profile set, falling back to 1 default profile: "default"
+2023-03-22 19:49:11.346  INFO 79946 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2023-03-22 19:49:11.350  INFO 79946 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-03-22 19:49:11.350  INFO 79946 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.71]
+2023-03-22 19:49:11.388  INFO 79946 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-03-22 19:49:11.388  INFO 79946 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 546 ms
+2023-03-22 19:49:11.682  INFO 79946 --- [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 17 endpoint(s) beneath base path '/actuator'
+2023-03-22 19:49:11.710  INFO 79946 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2023-03-22 19:49:11.721  INFO 79946 --- [main] c.example.actuator.ActuatorApplication   : Started ActuatorApplication in 1.087 seconds (JVM running for 1.555)
+2023-03-22 19:49:11.769  WARN 79946 --- [registrationTask1] d.c.b.a.c.r.ApplicationRegistrator       : Failed to register application as Application(name=test, managementUrl=http://localhost:8080/actuator, healthUrl=http://localhost:8080/actuator/health, serviceUrl=http://localhost:8080/) at spring-boot-admin ([http://localhost:8082/instances]): 403 Forbidden: "An expected CSRF token cannot be found". Further attempts are logged on DEBUG level
+2023-03-22 19:49:11.945  INFO 79946 --- [RMI TCP Connection(3)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-03-22 19:49:11.946  INFO 79946 --- [RMI TCP Connection(3)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-03-22 19:49:11.947  INFO 79946 --- [RMI TCP Connection(3)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-03-22 19:51:39.051  INFO 80140 --- [main] c.example.actuator.ActuatorApplication   : Starting ActuatorApplication using Java 11.0.18 on MacBook-Pro.local with PID 80140 (/Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator/target/classes started by sanghyeonkim in /Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator)
+2023-03-22 19:51:39.052  INFO 80140 --- [main] c.example.actuator.ActuatorApplication   : No active profile set, falling back to 1 default profile: "default"
+2023-03-22 19:51:39.563  INFO 80140 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2023-03-22 19:51:39.568  INFO 80140 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-03-22 19:51:39.568  INFO 80140 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.71]
+2023-03-22 19:51:39.607  INFO 80140 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-03-22 19:51:39.607  INFO 80140 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 524 ms
+2023-03-22 19:51:39.902  INFO 80140 --- [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 17 endpoint(s) beneath base path '/actuator'
+2023-03-22 19:51:39.933  INFO 80140 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2023-03-22 19:51:39.945  INFO 80140 --- [main] c.example.actuator.ActuatorApplication   : Started ActuatorApplication in 1.121 seconds (JVM running for 1.445)
+2023-03-22 19:51:39.992  WARN 80140 --- [registrationTask1] d.c.b.a.c.r.ApplicationRegistrator       : Failed to register application as Application(name=test, managementUrl=http://localhost:8080/actuator, healthUrl=http://localhost:8080/actuator/health, serviceUrl=http://localhost:8080/) at spring-boot-admin ([http://localhost:8082/instances]): 403 Forbidden: "An expected CSRF token cannot be found". Further attempts are logged on DEBUG level
+2023-03-22 19:51:40.273  INFO 80140 --- [RMI TCP Connection(1)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-03-22 19:51:40.274  INFO 80140 --- [RMI TCP Connection(1)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-03-22 19:51:40.275  INFO 80140 --- [RMI TCP Connection(1)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-03-22 19:52:10.075  INFO 80140 --- [registrationTask1] d.c.b.a.c.r.ApplicationRegistrator       : Application registered itself as a973ff14be49
+2023-03-22 19:52:39.990  WARN 80140 --- [registrationTask1] d.c.b.a.c.r.ApplicationRegistrator       : Failed to register application as Application(name=test, managementUrl=http://localhost:8080/actuator, healthUrl=http://localhost:8080/actuator/health, serviceUrl=http://localhost:8080/) at spring-boot-admin ([http://localhost:8082/instances]): 403 Forbidden: "An expected CSRF token cannot be found". Further attempts are logged on DEBUG level
+2023-03-22 19:54:36.885  INFO 80396 --- [main] c.example.actuator.ActuatorApplication   : Starting ActuatorApplication using Java 11.0.18 on MacBook-Pro.local with PID 80396 (/Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator/target/classes started by sanghyeonkim in /Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator)
+2023-03-22 19:54:36.888  INFO 80396 --- [main] c.example.actuator.ActuatorApplication   : No active profile set, falling back to 1 default profile: "default"
+2023-03-22 19:54:37.383  INFO 80396 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2023-03-22 19:54:37.388  INFO 80396 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-03-22 19:54:37.388  INFO 80396 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.71]
+2023-03-22 19:54:37.427  INFO 80396 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-03-22 19:54:37.427  INFO 80396 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 520 ms
+2023-03-22 19:54:37.722  INFO 80396 --- [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 17 endpoint(s) beneath base path '/actuator'
+2023-03-22 19:54:37.752  INFO 80396 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2023-03-22 19:54:37.763  INFO 80396 --- [main] c.example.actuator.ActuatorApplication   : Started ActuatorApplication in 1.11 seconds (JVM running for 1.447)
+2023-03-22 19:54:37.806  WARN 80396 --- [registrationTask1] d.c.b.a.c.r.ApplicationRegistrator       : Failed to register application as Application(name=test, managementUrl=http://localhost:8080/actuator, healthUrl=http://localhost:8080/actuator/health, serviceUrl=http://localhost:8080/) at spring-boot-admin ([http://localhost:8082/instances]): 403 Forbidden: "An expected CSRF token cannot be found". Further attempts are logged on DEBUG level
+2023-03-22 19:54:37.968  INFO 80396 --- [RMI TCP Connection(3)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-03-22 19:54:37.968  INFO 80396 --- [RMI TCP Connection(3)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-03-22 19:54:37.969  INFO 80396 --- [RMI TCP Connection(3)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-03-22 19:57:18.469  INFO 80576 --- [main] c.example.actuator.ActuatorApplication   : Starting ActuatorApplication using Java 11.0.18 on MacBook-Pro.local with PID 80576 (/Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator/target/classes started by sanghyeonkim in /Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator)
+2023-03-22 19:57:18.479  INFO 80576 --- [main] c.example.actuator.ActuatorApplication   : No active profile set, falling back to 1 default profile: "default"
+2023-03-22 19:57:18.980  INFO 80576 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2023-03-22 19:57:18.984  INFO 80576 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-03-22 19:57:18.984  INFO 80576 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.71]
+2023-03-22 19:57:19.021  INFO 80576 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-03-22 19:57:19.022  INFO 80576 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 522 ms
+2023-03-22 19:57:19.321  INFO 80576 --- [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 17 endpoint(s) beneath base path '/actuator'
+2023-03-22 19:57:19.350  INFO 80576 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2023-03-22 19:57:19.362  INFO 80576 --- [main] c.example.actuator.ActuatorApplication   : Started ActuatorApplication in 1.111 seconds (JVM running for 1.42)
+2023-03-22 19:57:19.406  WARN 80576 --- [registrationTask1] d.c.b.a.c.r.ApplicationRegistrator       : Failed to register application as Application(name=test, managementUrl=http://localhost:8080/actuator, healthUrl=http://localhost:8080/actuator/health, serviceUrl=http://localhost:8080/) at spring-boot-admin ([http://localhost:8082/instances]): 403 Forbidden: "An expected CSRF token cannot be found". Further attempts are logged on DEBUG level
+2023-03-22 19:57:19.741  INFO 80576 --- [RMI TCP Connection(3)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-03-22 19:57:19.741  INFO 80576 --- [RMI TCP Connection(3)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-03-22 19:57:19.742  INFO 80576 --- [RMI TCP Connection(3)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-03-22 19:57:48.193  INFO 80625 --- [main] c.example.actuator.ActuatorApplication   : Starting ActuatorApplication using Java 11.0.18 on MacBook-Pro.local with PID 80625 (/Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator/target/classes started by sanghyeonkim in /Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator)
+2023-03-22 19:57:48.194  INFO 80625 --- [main] c.example.actuator.ActuatorApplication   : No active profile set, falling back to 1 default profile: "default"
+2023-03-22 19:57:48.716  INFO 80625 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2023-03-22 19:57:48.720  INFO 80625 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-03-22 19:57:48.721  INFO 80625 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.71]
+2023-03-22 19:57:48.765  INFO 80625 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-03-22 19:57:48.766  INFO 80625 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 543 ms
+2023-03-22 19:57:49.074  INFO 80625 --- [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 17 endpoint(s) beneath base path '/actuator'
+2023-03-22 19:57:49.105  INFO 80625 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2023-03-22 19:57:49.117  INFO 80625 --- [main] c.example.actuator.ActuatorApplication   : Started ActuatorApplication in 1.117 seconds (JVM running for 1.426)
+2023-03-22 19:57:49.165  WARN 80625 --- [registrationTask1] d.c.b.a.c.r.ApplicationRegistrator       : Failed to register application as Application(name=test, managementUrl=http://localhost:8080/actuator, healthUrl=http://localhost:8080/actuator/health, serviceUrl=http://localhost:8080/) at spring-boot-admin ([http://localhost:8082/instances]): 403 Forbidden: "An expected CSRF token cannot be found". Further attempts are logged on DEBUG level
+2023-03-22 19:57:49.344  INFO 80625 --- [RMI TCP Connection(3)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-03-22 19:57:49.345  INFO 80625 --- [RMI TCP Connection(3)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-03-22 19:57:49.346  INFO 80625 --- [RMI TCP Connection(3)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-03-22 20:06:39.511  INFO 80625 --- [registrationTask1] d.c.b.a.c.r.ApplicationRegistrator       : Application registered itself as a973ff14be49
+2023-03-22 20:06:43.648  INFO 81275 --- [main] c.example.actuator.ActuatorApplication   : Starting ActuatorApplication using Java 11.0.18 on MacBook-Pro.local with PID 81275 (/Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator/target/classes started by sanghyeonkim in /Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator)
+2023-03-22 20:06:43.652  INFO 81275 --- [main] c.example.actuator.ActuatorApplication   : No active profile set, falling back to 1 default profile: "default"
+2023-03-22 20:06:44.167  INFO 81275 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2023-03-22 20:06:44.172  INFO 81275 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-03-22 20:06:44.172  INFO 81275 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.71]
+2023-03-22 20:06:44.212  INFO 81275 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-03-22 20:06:44.213  INFO 81275 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 541 ms
+2023-03-22 20:06:44.507  INFO 81275 --- [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 17 endpoint(s) beneath base path '/actuator'
+2023-03-22 20:06:44.536  INFO 81275 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2023-03-22 20:06:44.547  INFO 81275 --- [main] c.example.actuator.ActuatorApplication   : Started ActuatorApplication in 1.146 seconds (JVM running for 1.503)
+2023-03-22 20:06:44.719  INFO 81275 --- [registrationTask1] d.c.b.a.c.r.ApplicationRegistrator       : Application registered itself as a973ff14be49
+2023-03-22 20:06:44.736  INFO 81275 --- [http-nio-8080-exec-3] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-03-22 20:06:44.736  INFO 81275 --- [http-nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-03-22 20:06:44.738  INFO 81275 --- [http-nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-03-22 20:06:53.192  INFO 81295 --- [main] c.example.actuator.ActuatorApplication   : Starting ActuatorApplication using Java 11.0.18 on MacBook-Pro.local with PID 81295 (/Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator/target/classes started by sanghyeonkim in /Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator)
+2023-03-22 20:06:53.195  INFO 81295 --- [main] c.example.actuator.ActuatorApplication   : No active profile set, falling back to 1 default profile: "default"
+2023-03-22 20:06:53.702  INFO 81295 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2023-03-22 20:06:53.707  INFO 81295 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-03-22 20:06:53.707  INFO 81295 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.71]
+2023-03-22 20:06:53.748  INFO 81295 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-03-22 20:06:53.748  INFO 81295 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 535 ms
+2023-03-22 20:06:54.041  INFO 81295 --- [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 17 endpoint(s) beneath base path '/actuator'
+2023-03-22 20:06:54.069  INFO 81295 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2023-03-22 20:06:54.080  INFO 81295 --- [main] c.example.actuator.ActuatorApplication   : Started ActuatorApplication in 1.138 seconds (JVM running for 1.491)
+2023-03-22 20:06:54.249  INFO 81295 --- [registrationTask1] d.c.b.a.c.r.ApplicationRegistrator       : Application registered itself as a973ff14be49
+2023-03-22 20:06:54.270  INFO 81295 --- [http-nio-8080-exec-3] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-03-22 20:06:54.270  INFO 81295 --- [http-nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-03-22 20:06:54.272  INFO 81295 --- [http-nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-03-22 20:16:54.855  INFO 81512 --- [main] c.example.actuator.ActuatorApplication   : Starting ActuatorApplication using Java 11.0.18 on MacBook-Pro.local with PID 81512 (/Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator/target/classes started by sanghyeonkim in /Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator)
+2023-03-22 20:16:54.857  INFO 81512 --- [main] c.example.actuator.ActuatorApplication   : No active profile set, falling back to 1 default profile: "default"
+2023-03-22 20:16:55.378  INFO 81512 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2023-03-22 20:16:55.382  INFO 81512 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-03-22 20:16:55.382  INFO 81512 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.71]
+2023-03-22 20:16:55.424  INFO 81512 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-03-22 20:16:55.424  INFO 81512 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 536 ms
+2023-03-22 20:16:55.726  INFO 81512 --- [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 17 endpoint(s) beneath base path '/actuator'
+2023-03-22 20:16:55.758  INFO 81512 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2023-03-22 20:16:55.769  INFO 81512 --- [main] c.example.actuator.ActuatorApplication   : Started ActuatorApplication in 1.211 seconds (JVM running for 1.619)
+2023-03-22 20:16:55.814  WARN 81512 --- [registrationTask1] d.c.b.a.c.r.ApplicationRegistrator       : Failed to register application as Application(name=test, managementUrl=http://localhost:8080/actuator, healthUrl=http://localhost:8080/actuator/health, serviceUrl=http://localhost:8080/) at spring-boot-admin ([http://localhost:8082/instances]): 401 : [no body]. Further attempts are logged on DEBUG level
+2023-03-22 20:16:56.014  INFO 81512 --- [RMI TCP Connection(1)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-03-22 20:16:56.014  INFO 81512 --- [RMI TCP Connection(1)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-03-22 20:16:56.015  INFO 81512 --- [RMI TCP Connection(1)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-03-22 20:17:14.122  INFO 81548 --- [main] c.example.actuator.ActuatorApplication   : Starting ActuatorApplication using Java 11.0.18 on MacBook-Pro.local with PID 81548 (/Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator/target/classes started by sanghyeonkim in /Users/sanghyeonkim/Downloads/port/springinAction/chapter16/actuator)
+2023-03-22 20:17:14.123  INFO 81548 --- [main] c.example.actuator.ActuatorApplication   : No active profile set, falling back to 1 default profile: "default"
+2023-03-22 20:17:14.624  INFO 81548 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2023-03-22 20:17:14.629  INFO 81548 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2023-03-22 20:17:14.629  INFO 81548 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.71]
+2023-03-22 20:17:14.666  INFO 81548 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2023-03-22 20:17:14.667  INFO 81548 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 519 ms
+2023-03-22 20:17:14.958  INFO 81548 --- [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 17 endpoint(s) beneath base path '/actuator'
+2023-03-22 20:17:14.987  INFO 81548 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2023-03-22 20:17:14.999  INFO 81548 --- [main] c.example.actuator.ActuatorApplication   : Started ActuatorApplication in 1.146 seconds (JVM running for 1.451)
+2023-03-22 20:17:15.166  INFO 81548 --- [registrationTask1] d.c.b.a.c.r.ApplicationRegistrator       : Application registered itself as a973ff14be49
+2023-03-22 20:17:15.191  INFO 81548 --- [http-nio-8080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2023-03-22 20:17:15.191  INFO 81548 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2023-03-22 20:17:15.192  INFO 81548 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2023-03-22 20:22:55.574  WARN 81548 --- [registrationTask1] d.c.b.a.c.r.ApplicationRegistrator       : Failed to register application as Application(name=test, managementUrl=http://localhost:8080/actuator, healthUrl=http://localhost:8080/actuator/health, serviceUrl=http://localhost:8080/) at spring-boot-admin ([http://localhost:8082/instances]): I/O error on POST request for "http://localhost:8082/instances": Unexpected end of file from server; nested exception is java.net.SocketException: Unexpected end of file from server. Further attempts are logged on DEBUG level
